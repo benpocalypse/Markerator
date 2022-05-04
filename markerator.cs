@@ -9,8 +9,8 @@ namespace com.github.benpocalypse
 {
     class markerator
     {
-        private static string defaultStyleHtml = @"
-.topnav {
+        private static string defaultCss = @"
+.navigation {
   overflow: hidden;
   position: fixed;
   top: 0px;
@@ -21,7 +21,7 @@ namespace com.github.benpocalypse
   background-color: #333;
 }
 
-.topnav a {
+.navigation a {
   float: left;
   color: #f2f2f2;
   text-align: center;
@@ -30,7 +30,7 @@ namespace com.github.benpocalypse
   font-size: 17px;
 }
 
-.topnav a:hover {
+.navigation a:hover {
   background-color: #ddd;
   color: black;
 }
@@ -75,6 +75,7 @@ body {
                 .Parameter<string>("-i", "--indexFile")
                     .WithDescription("The markdown file that is to be converted to the index.html file.")
                     .WithExamples("mainFile.md", "radicalText.md")
+                    .WithValidation(name => !name.Contains(" "), name => "Markdown filename cannot contain spaces.")
                     .IsRequired()
                 .Parameter<bool>("-p", "--posts")
                     .WithDescription("Whether or not the site should include a posts link (like a news or updates section.)")
@@ -98,7 +99,7 @@ body {
                     string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
 
                     string faviconHtml = @$"<link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">";
-                    string navigationHtml = @$"<div class=""topnav"">
+                    string navigationHtml = @$"<div class=""navigation"">
 <a href=""./index.html"">{siteTitle}</a>
 ";
 
@@ -145,7 +146,7 @@ body {
 <html>
     <head>
         <style>
-            {defaultStyleHtml}
+            {defaultCss}
         </style>
         <title>{siteTitle}</title>
         {faviconHtml}
@@ -172,7 +173,7 @@ body {
 <html>
     <head>
         <style>
-            {defaultStyleHtml}
+            {defaultCss}
         </style>
         <title>{siteTitle}</title>
         {faviconHtml}
@@ -202,7 +203,7 @@ body {
 <html>
     <head>
         <style>
-            {defaultStyleHtml}
+            {defaultCss}
         </style>
         <title>{siteTitle}</title>
         {faviconHtml}
