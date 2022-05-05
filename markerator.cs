@@ -73,133 +73,72 @@ body {
                     .WithExamples("Markerator Generated Site", "zombo.com")
                     .IsRequired()
                 .Parameter<string>("-i", "--indexFile")
-                    .WithDescription("The markdown file that is to be converted to the index.html file.")
+                    .WithDescription("The markdown file that is to be converted into the index.html file.")
                     .WithExamples("mainFile.md", "radicalText.md")
                     .WithValidation(name => !name.Contains(" "), name => "Markdown filename cannot contain spaces.")
                     .IsRequired()
                 .Parameter<bool>("-p", "--posts")
                     .WithDescription("Whether or not the site should include a posts link (like a news or updates section.)")
                     .WithExamples("true", "false")
-                    .IsRequired()
+                    .IsOptionalWithDefault(false)
                 .Parameter<string>("-pt", "--postsTitle")
                     .WithDescription("The title that the posts section should use.")
                     .WithExamples("News", "Updates", "Blog")
                     .IsOptionalWithDefault("Posts")
                 .Parameter<bool>("-f", "--favicon")
-                    .WithDescription("Whether or not the site should use a favicon file in the images directory.")
+                    .WithDescription("Whether or not the site should use a favicon.ico file in the /input/images directory.")
                     .WithExamples("true", "false")
                     .IsOptionalWithDefault(false)
                 .Call(favicon => postsTitle => posts => indexFile => siteTitle =>
                 {
                     Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
-                    string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", indexFile);
-                    string contentMarkdown = File.ReadAllText(contentFilename);
-                    var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-                    string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
+                    CreateOutputDirectories();
 
-                    string faviconHtml = @$"<link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">";
-                    string navigationHtml = @$"<div class=""navigation"">
-<a href=""./index.html"">{siteTitle}</a>
-";
+                    CreateIndexHtml(
+                        indexFile: indexFile,
+                        includeFavicon: favicon,
+                        includePosts: posts,
+                        postsTitle: postsTitle,
+                        siteTitle: siteTitle
+                    );
 
-                // Create the output directory, and copy everything we need over.
-                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output"));
-                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
-                Copy(
-                    sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
-                    targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
-                );
-
-                if (posts == true)
-                {
-                    navigationHtml += @$"<a href=""./posts.html"">{postsTitle}</a>
-";
-                    navigationHtml += "</div>";
-
-                    Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
-
-                    string postsIndexHtml = @$"<h1>{postsTitle}</h1>" + System.Environment.NewLine;
-
-                    foreach (var postfile in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "input", "posts")))
+                    if (posts == true)
                     {
-                        string postMarkdown = File.ReadAllText(postfile);
-                        var postPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-                        string postHtml = Markdown.ToHtml(postMarkdown, postPipeline);
-                        var postHtmlFile = Path.GetFileNameWithoutExtension(postfile) + ".html";
-
-                        HtmlDocument doc = new HtmlDocument();
-                        doc.LoadHtml(postHtml);
-
-                        var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
-                        var postHtmlSummary = doc.DocumentNode.SelectNodes("//p").FirstOrDefault().InnerText;
-
-                        Console.WriteLine("postHtmlFile = " + postHtmlFile);
-
-                        postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle}- {File.GetCreationTime(postfile)}
-                        <p>{postHtmlSummary}</p>
-                        </a>
-                        <hr align=""left"">
-";
-
-                        string htmlPost = @$"<!DOCTYPE html>
-<html>
-    <head>
-        <style>
-            {defaultCss}
-        </style>
-        <title>{siteTitle}</title>
-        {faviconHtml}
-        {navigationHtml}
-    </head>
-    <body>
-        <div class=""content"">
-            {postHtml}
-        </div>
-    </body>
-</html> ";
-
-                        File.WriteAllText(
-                            Path.Combine(
-                                Directory.GetCurrentDirectory(),
-                                "output",
-                                "posts",
-                                postHtmlFile
-                                ),
-                            htmlPost);
+                        CreatePosts(
+                            includeFavicon: favicon,
+                            postsTitle: postsTitle,
+                            siteTitle: siteTitle
+                        );
                     }
 
-                    string htmlPosts = @$"<!DOCTYPE html>
-<html>
-    <head>
-        <style>
-            {defaultCss}
-        </style>
-        <title>{siteTitle}</title>
-        {faviconHtml}
-        {navigationHtml}
-    </head>
-    <body>
-        <div class=""content"">
-            {postsIndexHtml}
-        </div>
-    </body>
-</html> ";
+                    Console.WriteLine($"...site generation successful.");
+                })
+                .Parse(args);
+        }
 
-                    File.WriteAllText(
-                        Path.Combine(
-                            Directory.GetCurrentDirectory(),
-                            "output",
-                            "posts.html"
-                            ),
-                        htmlPosts);
-                }
-                else
-                {
-                    navigationHtml += "</div>";
-                }
+        private static void CreateIndexHtml(string indexFile, bool includeFavicon, bool includePosts, string postsTitle, string siteTitle)
+        {
+            string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", indexFile);
+            string contentMarkdown = File.ReadAllText(contentFilename);
+            var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+            string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
 
-                string htmlIndex = @$"<!DOCTYPE html>
+            string faviconHtml = includeFavicon == true ?
+                @$"<link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">"
+                : string.Empty;
+
+            string postsLinkHtml = includePosts == true ?
+                @$"<a href=""./posts.html"">{postsTitle}</a>
+"
+                : string.Empty;
+
+            string navigationHtml = @$"<div class=""navigation"">
+<a href=""./index.html"">{siteTitle}</a>
+{postsLinkHtml}
+</div>";
+
+            string htmlIndex = @$"<!DOCTYPE html>
 <html>
     <head>
         <style>
@@ -216,18 +155,115 @@ body {
     </body>
 </html> ";
 
+            File.WriteAllText(
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "output",
+                    "index.html"
+                    ),
+                    htmlIndex);
+        }
+
+        private static void CreatePosts(bool includeFavicon, string postsTitle, string siteTitle)
+        {
+            string faviconHtml = includeFavicon == true ?
+                @$"<link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">"
+                : string.Empty;
+
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
+
+            string postsIndexHtml = @$"<h1>{postsTitle}</h1>" + System.Environment.NewLine;
+
+            foreach (var postfile in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "input", "posts")))
+            {
+                string postMarkdown = File.ReadAllText(postfile);
+                var postPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+                string postHtml = Markdown.ToHtml(postMarkdown, postPipeline);
+                var postHtmlFile = Path.GetFileNameWithoutExtension(postfile) + ".html";
+
+                HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(postHtml);
+
+                var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
+                var postHtmlSummary = doc.DocumentNode.SelectNodes("//p").FirstOrDefault().InnerText;
+
+                string postNavigationHtml = @$"<div class=""navigation"">
+<a href=""../index.html"">{siteTitle}</a>
+<a href=""../posts.html"">{postsTitle}</a>
+</div>";
+
+                postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle}- {File.GetCreationTime(postfile)}
+                <p>{postHtmlSummary}</p>
+                </a>
+                <hr align=""left"">
+";
+
+                string htmlPost = @$"<!DOCTYPE html>
+<html>
+<head>
+<style>
+    {defaultCss}
+</style>
+<title>{siteTitle}</title>
+{faviconHtml}
+{postNavigationHtml}
+</head>
+<body>
+<div class=""content"">
+    {postHtml}
+</div>
+</body>
+</html> ";
+
                 File.WriteAllText(
                     Path.Combine(
                         Directory.GetCurrentDirectory(),
                         "output",
-                        "index.html"
+                        "posts",
+                        postHtmlFile
                         ),
-                    htmlIndex);
+                    htmlPost);
+            }
 
-                Console.WriteLine($"...site generation successful.");
+            string htmlPosts = @$"<!DOCTYPE html>
+<html>
+<head>
+<style>
+    {defaultCss}
+</style>
+<title>{siteTitle}</title>
+{faviconHtml}
+<div class=""navigation"">
+<a href=""./index.html"">{siteTitle}</a>
+<a href=""./posts.html"">{postsTitle}</a>
+</div>
+</head>
+<body>
+<div class=""content"">
+    {postsIndexHtml}
+</div>
+</body>
+</html> ";
 
-                })
-                .Parse(args);
+            File.WriteAllText(
+                Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "output",
+                    "posts.html"
+                    ),
+                htmlPosts);
+        }
+
+        private static void CreateOutputDirectories()
+        {
+            // TODO: Spit out a message about what the actual proper directory structure for input should look like.
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output"));
+            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
+
+            Copy(
+                sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
+                targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
+            );
         }
 
         private static void Copy(string sourceDirectory, string targetDirectory)
