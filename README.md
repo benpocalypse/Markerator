@@ -41,7 +41,7 @@ Below represents the minimum that markerator expects in order to create a valid 
 
 #### Commandline
 ```
-./markerator --title Bengineering --indexFile index.md --favicon true
+./markerator --title Bengineering --indexFile index.md
 ```
 
 ### Site including Posts and a favicon
@@ -62,7 +62,7 @@ Below represents the minimum that markerator expects in order to create a valid 
 # Features
 - [x] Markdown input processing (via Markdig)
 - [x] Html interception/injection (via HtmlAgilityPack)
-- [x] CLI argument processing (via FLuentArgs)
+- [x] CLI argument processing (via FluentArgs)
 - [x] Post Generation
 
 # Todo
