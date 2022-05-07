@@ -12,7 +12,7 @@ namespace com.github.benpocalypse
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
-                .DefaultConfigsWithAppDescription("A static website generator written in C#.")
+                .DefaultConfigsWithAppDescription("A very simple static website generator written in C#.")
                 .RegisterHelpFlag("-h", "--help")
                 .Parameter<string>("-t", "--title")
                     .WithDescription("The title of the website.")
@@ -45,8 +45,11 @@ namespace com.github.benpocalypse
 
                     CreateOutputDirectories();
 
-                    CreateIndexHtml(
-                        indexFile: indexFile,
+                    // TODO - Impelement Css file handling
+                    // CreateCssSection (customCss) ;
+
+                    CreateHtmlPage(
+                        markdownFile: indexFile,
                         includeFavicon: favicon,
                         includePosts: posts,
                         postsTitle: postsTitle,
@@ -54,27 +57,28 @@ namespace com.github.benpocalypse
                         css: customCss
                     );
 
-                    if (posts == true)
+                    posts.IfTrue(() =>
                     {
-                        CreatePosts(
+                        CreateHtmlPostPages(
                             includeFavicon: favicon,
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
                             css: customCss
                         );
-                    }
+                    });
 
                     Console.WriteLine($"...site generation successful.");
                 })
                 .Parse(args);
         }
 
-        private static void CreateIndexHtml(string indexFile, bool includeFavicon, bool includePosts, string postsTitle, string siteTitle, string css)
+        private static void CreateHtmlPage(string markdownFile, bool includeFavicon, bool includePosts, string postsTitle, string siteTitle, string css)
         {
-            string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", indexFile);
+            string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", markdownFile);
             string contentMarkdown = File.ReadAllText(contentFilename);
             var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
             string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
+            var markdownHtmlFile = Path.GetFileNameWithoutExtension(markdownFile) + ".html";
 
             var htmlIndex = GetPageHtml(
                 siteTitle: siteTitle,
@@ -89,12 +93,12 @@ namespace com.github.benpocalypse
                 Path.Combine(
                     Directory.GetCurrentDirectory(),
                     "output",
-                    "index.html"
+                    markdownHtmlFile
                     ),
                     htmlIndex);
         }
 
-        private static void CreatePosts(bool includeFavicon, string postsTitle, string siteTitle, string css)
+        private static void CreateHtmlPostPages(bool includeFavicon, string postsTitle, string siteTitle, string css)
         {
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
 
@@ -107,11 +111,15 @@ namespace com.github.benpocalypse
                 string postHtml = Markdown.ToHtml(postMarkdown, postPipeline);
                 var postHtmlFile = Path.GetFileNameWithoutExtension(postfile) + ".html";
 
+                Console.WriteLine($"..adding post for {postfile}...");
+
                 HtmlDocument doc = new HtmlDocument();
                 doc.LoadHtml(postHtml);
 
                 var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
                 var postHtmlSummary = doc.DocumentNode.SelectNodes("//p").FirstOrDefault().InnerText;
+
+                // TODO - Support images/cards for post summaries.
 
                 postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle}- {File.GetCreationTime(postfile)}
                 <p>{postHtmlSummary}</p>
@@ -159,12 +167,17 @@ namespace com.github.benpocalypse
         {
             // TODO: Spit out a message about what the actual proper directory structure for input should look like.
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output"));
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
 
-            CopyDirectory(
+            if (Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "input", "images")))
+            {
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
+                CopyDirectory(
                 sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
                 targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
             );
+            }
+
+
         }
 
         private static void CopyDirectory(string sourceDirectory, string targetDirectory)
@@ -205,7 +218,9 @@ namespace com.github.benpocalypse
 <html>
     <head>
         <style>
-            {css}
+            {(css == string.Empty ?
+                defaultCss :
+                css)}
         </style>
         <title>{siteTitle}</title>
         {(includeFavicon == true ?
