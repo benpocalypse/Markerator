@@ -38,7 +38,7 @@ namespace com.github.benpocalypse
                 .Parameter<string>("-c", "--css")
                     .WithDescription("Inlude custom CSS file that will theme the generated site.")
                     .WithExamples("LightTheme.css", "DarkTheme.css")
-                    .IsOptionalWithDefault(string.Empty)
+                    .IsOptionalWithDefault(defaultCss)
                 .Call(customCss => favicon => postsTitle => posts => indexFile => siteTitle =>
                 {
                     Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
@@ -230,10 +230,13 @@ namespace com.github.benpocalypse
             <a href=""./index.html"">{siteTitle}</a>
         {(includePosts == true ?
 @$"         <a href=""./posts.html"">{postsTitle}</a>
+            {themeHtml}
         </div>
 " : @$"
+        {themeHtml}
         </div>")}
 ")}
+        {themeHtml}
     </head>
     <body>
         <div class=""content"">
@@ -262,6 +265,7 @@ namespace com.github.benpocalypse
             <a href=""../index.html"">{siteTitle}</a>
             <a href=""../posts.html"">{postsTitle}</a>
         </div>
+        {themeHtml}
     </head>
     <body>
         <div class=""content"">
@@ -269,6 +273,17 @@ namespace com.github.benpocalypse
         </div>
     </body>
 </html> ";
+
+        private const string themeHtml = @"
+        <div class=""dropdown"">
+            <button class=""dropdownbutton"">Theme</button>
+            <div class=""dropdown-content"">
+                <a href=""#"">Link 1</a>
+                <a href=""#"">Link 2</a>
+                <a href=""#"">Link 3</a>
+            </div>
+        </div>
+        ";
 
         private const string defaultCss = @"
 .navigation {
@@ -288,13 +303,50 @@ namespace com.github.benpocalypse
   text-align: center;
   padding: 14px 16px;
   text-decoration: none;
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .navigation a:hover {
   background-color: #ddd;
   color: black;
 }
+
+.dropdownbutton {
+  background-color: #333;
+  color: #f2f2f2;
+  font-size: 16px;
+  padding: 6px;
+  padding-right: 40px;
+  border: none;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  float: right;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {background-color: #ddd;}
+
+.dropdown:hover .dropdown-content {display: block;}
+
+.dropdown:hover .dropbtn {background-color: #3e8e41;}
 
 .content {
     padding-left: 20%;

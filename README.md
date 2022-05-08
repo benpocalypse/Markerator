@@ -1,7 +1,12 @@
 # Markerator
 A very simple static website generator written in C#/.Net. I created this mainly because I was disappointed at the sheer complexity of any of the existing static site generators I was able to find. No offense to anyone creating web content, but to me, things have gotten far too complex to create even an MVP website. I plan to dogfood markerator for my own website once it reaches a minimum level of maturity. And yes, I realize the logo is very immature.
 
+<div style="text-align: center;">
 ![Markerator Logo](docs/images/markerator_logo_small.png)
+</div>
+
+# Simple
+Although it seems to be a necessary evil nowadays, I tend to detest javascript use in web pages. That being said, the sites generated using Markerator will use no/minimal javascript, and will offer no tracking or analytics features built-in. If that's what you need in a static site generator, feel free to fork this repo and add those things yourself - I'll never include them by default.
 
 # Platforms
 Any platform that .NET 5 or newer supports.
@@ -45,6 +50,7 @@ Below represents the minimum that markerator expects in order to create a valid 
 ```
 
 ### Site including Posts and a favicon
+Example including a posts section and a favicon.
 #### Folder Layout
 ```
 /input/images/favicon.ico
@@ -59,17 +65,18 @@ Below represents the minimum that markerator expects in order to create a valid 
 ./markerator --title Bengineering --indexFile index.md --favicon true -posts true
 ```
 
-# Features
+## Features
 - [x] Markdown input processing (via Markdig)
 - [x] Html interception/injection (via HtmlAgilityPack)
 - [x] CLI argument processing (via FluentArgs)
 - [x] Post Generation
 
-# Todo
+## Todo
 - [ ] Custom Css loading
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
+- [ ] Page footers
 - [ ] Multiple Page creation for more than just index.html and Posts
 - [ ] Better exception/error handling and user direction
 - [ ] Include markerator in Github CI
