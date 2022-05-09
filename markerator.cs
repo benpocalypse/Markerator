@@ -9,10 +9,12 @@ namespace com.github.benpocalypse
 {
     class markerator
     {
+        private static string _version = "0.1.0";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
-                .DefaultConfigsWithAppDescription("A very simple static website generator written in C#.")
+                .DefaultConfigsWithAppDescription(@$"Markerator v{_version}.
+A very simple static website generator written in C#.")
                 .RegisterHelpFlag("-h", "--help")
                 .Parameter<string>("-t", "--title")
                     .WithDescription("The title of the website.")
@@ -38,7 +40,7 @@ namespace com.github.benpocalypse
                 .Parameter<string>("-c", "--css")
                     .WithDescription("Inlude custom CSS file that will theme the generated site.")
                     .WithExamples("LightTheme.css", "DarkTheme.css")
-                    .IsOptionalWithDefault(defaultCss)
+                    .IsOptional()
                 .Call(customCss => favicon => postsTitle => posts => indexFile => siteTitle =>
                 {
                     Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
@@ -54,7 +56,8 @@ namespace com.github.benpocalypse
                         includePosts: posts,
                         postsTitle: postsTitle,
                         siteTitle: siteTitle,
-                        css: customCss
+                        css: customCss,
+                        isIndex: true
                     );
 
                     posts.IfTrue(() =>
@@ -72,13 +75,12 @@ namespace com.github.benpocalypse
                 .Parse(args);
         }
 
-        private static void CreateHtmlPage(string markdownFile, bool includeFavicon, bool includePosts, string postsTitle, string siteTitle, string css)
+        private static void CreateHtmlPage(string markdownFile, bool includeFavicon, bool includePosts, string postsTitle, string siteTitle, string css, bool isIndex = false)
         {
             string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", markdownFile);
             string contentMarkdown = File.ReadAllText(contentFilename);
             var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
             string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
-            var markdownHtmlFile = Path.GetFileNameWithoutExtension(markdownFile) + ".html";
 
             var htmlIndex = GetPageHtml(
                 siteTitle: siteTitle,
@@ -93,7 +95,9 @@ namespace com.github.benpocalypse
                 Path.Combine(
                     Directory.GetCurrentDirectory(),
                     "output",
-                    markdownHtmlFile
+                    isIndex == true ?
+                        "index.html" :
+                        Path.GetFileNameWithoutExtension(markdownFile) + ".html"
                     ),
                     htmlIndex);
         }
@@ -121,7 +125,7 @@ namespace com.github.benpocalypse
 
                 // TODO - Support images/cards for post summaries.
 
-                postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle}- {File.GetCreationTime(postfile)}
+                postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle} - {File.GetCreationTime(postfile)}
                 <p>{postHtmlSummary}</p>
                 </a>
                 <hr align=""left"">
@@ -226,8 +230,8 @@ namespace com.github.benpocalypse
         {(includeFavicon == true ?
 @$"     <link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">" : string.Empty)}
         {(
-@$"     <div class=""navigation"">
-            <a href=""./index.html"">{siteTitle}</a>
+@$"<div class=""navigation"">
+        <a href=""./index.html"">{siteTitle}</a>
         {(includePosts == true ?
 @$"         <a href=""./posts.html"">{postsTitle}</a>
             {themeHtml}
@@ -274,7 +278,7 @@ namespace com.github.benpocalypse
     </body>
 </html> ";
 
-        private const string themeHtml = @"
+        private const string themeHtml = "";/*@"
         <div class=""dropdown"">
             <button class=""dropdownbutton"">Theme</button>
             <div class=""dropdown-content"">
@@ -284,6 +288,7 @@ namespace com.github.benpocalypse
             </div>
         </div>
         ";
+        */
 
         private const string defaultCss = @"
 .navigation {
@@ -359,7 +364,7 @@ namespace com.github.benpocalypse
   color: #515151;
   text-align: left;
   text-decoration: none;
-  font-size: 17px;
+  font-size: 12px;
 }
 
 .content a:hover {

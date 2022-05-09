@@ -68,6 +68,7 @@ Example including a posts section and a favicon.
 - [x] Html interception/injection (via HtmlAgilityPack)
 - [x] CLI argument processing (via FluentArgs)
 - [x] Post Generation
+- [x] App versioning
 
 ## Todo
 - [ ] Custom Css loading
@@ -78,4 +79,3 @@ Example including a posts section and a favicon.
 - [ ] Multiple Page creation for more than just index.html and Posts
 - [ ] Better exception/error handling and user direction
 - [ ] Include markerator in Github CI
-- [ ] App versioning
