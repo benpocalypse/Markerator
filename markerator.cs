@@ -40,7 +40,7 @@ A very simple static website generator written in C#.")
                 .Parameter<string>("-c", "--css")
                     .WithDescription("Inlude custom CSS file that will theme the generated site.")
                     .WithExamples("LightTheme.css", "DarkTheme.css")
-                    .IsOptional()
+                    .IsOptionalWithDefault(defaultCss)
                 .Call(customCss => favicon => postsTitle => posts => indexFile => siteTitle =>
                 {
                     Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
@@ -222,9 +222,8 @@ A very simple static website generator written in C#.")
 <html>
     <head>
         <style>
-            {(css == string.Empty ?
-                defaultCss :
-                css)}
+            {pageFontCss}
+            {css}
         </style>
         <title>{siteTitle}</title>
         {(includeFavicon == true ?
@@ -260,6 +259,7 @@ A very simple static website generator written in C#.")
 <html>
     <head>
         <style>
+            {postsFontCss}
             {css}
         </style>
         <title>{siteTitle}</title>
@@ -290,68 +290,87 @@ A very simple static website generator written in C#.")
         ";
         */
 
+        private const string pageFontCss = @"
+@font-face {
+    font-family: Inconsolata; src: url(""./fonts/Inconsolata-Regular.ttf"");
+}
+    body {
+         font-family: Inconsolata
+}
+";
+
+private const string postsFontCss = @"
+@font-face {
+    font-family: Inconsolata; src: url(""../fonts/Inconsolata-Regular.ttf"");
+}
+    body {
+         font-family: Inconsolata
+}
+";
+
+
         private const string defaultCss = @"
 .navigation {
-  overflow: hidden;
-  position: fixed;
-  top: 0px;
-  margin-left: 0;
-  padding-left: 40%;
-  width: 100%;
-  align-items: center;
-  background-color: #333;
+    overflow: hidden;
+    position: fixed;
+    top: 0px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #333;
 }
 
 .navigation a {
-  float: left;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 16px;
+    float: left;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 16px;
 }
 
 .navigation a:hover {
-  background-color: #ddd;
-  color: black;
+    background-color: #ddd;
+    color: black;
 }
 
 .dropdownbutton {
-  background-color: #333;
-  color: #f2f2f2;
-  font-size: 16px;
-  padding: 6px;
-  padding-right: 40px;
-  border: none;
+    background-color: #333;
+    color: #f2f2f2;
+    font-size: 16px;
+    padding: 6px;
+    padding-right: 40px;
+    border: none;
 }
 
 .dropdown {
-  position: relative;
-  display: inline-block;
-  float: right;
+    position: relative;
+    display: inline-block;
+    float: right;
 }
 
 .dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f1f1f1;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
 }
 
 .dropdown-content a {
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
 }
 
-.dropdown-content a:hover {background-color: #ddd;}
+.dropdown-content a:hover { background-color: #ddd; }
 
-.dropdown:hover .dropdown-content {display: block;}
+.dropdown:hover .dropdown-content { display: block; }
 
-.dropdown:hover .dropbtn {background-color: #3e8e41;}
+.dropdown:hover .dropbtn { background-color: #3e8e41; }
 
 .content {
     padding-left: 20%;
@@ -361,15 +380,15 @@ A very simple static website generator written in C#.")
 }
 
 .content a {
-  color: #515151;
-  text-align: left;
-  text-decoration: none;
-  font-size: 12px;
+    color: #515151;
+    text-align: left;
+    text-decoration: none;
+    font-size: 12px;
 }
 
 .content a:hover {
-  background-color: #ddd;
-  color: black;
+    background-color: #ddd;
+    color: black;
 }
 
 head {

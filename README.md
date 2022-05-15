@@ -69,13 +69,15 @@ Example including a posts section and a favicon.
 - [x] CLI argument processing (via FluentArgs)
 - [x] Post Generation
 - [x] App versioning
+- [x] Custom fonts
 
 ## Todo
 - [ ] Custom Css loading
+	- [ ] Custom font loading
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Page footers
 - [ ] Multiple Page creation for more than just index.html and Posts
-- [ ] Better exception/error handling and user direction
+- [ ] Better exception/error handling and user feedback
 - [ ] Include markerator in Github CI
