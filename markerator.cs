@@ -4,10 +4,11 @@ using Markdig;
 using FluentArgs;
 using HtmlAgilityPack;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace com.github.benpocalypse
 {
-    class markerator
+    public class markerator
     {
         private static string _version = "0.1.0";
         static void Main(string[] args)
@@ -37,11 +38,15 @@ A very simple static website generator written in C#.")
                     .WithDescription("Whether or not the site should use a favicon.ico file in the /input/images directory.")
                     .WithExamples("true", "false")
                     .IsOptionalWithDefault(false)
-                .Parameter<string>("-c", "--css")
+                .ListParameter<string>("-op", "--otherPages")
+                    .WithDescription("Additional pages that should be linked from the navigation bar, provided as a list of .md files.")
+                    .WithExamples("About.md,Contact.md")
+                    .IsOptionalWithDefault(new List<string>())
+                .ListParameter<string>("-c", "--css")
                     .WithDescription("Inlude custom CSS file that will theme the generated site.")
                     .WithExamples("LightTheme.css", "DarkTheme.css")
-                    .IsOptionalWithDefault(defaultCss)
-                .Call(customCss => favicon => postsTitle => posts => indexFile => siteTitle =>
+                    .IsOptionalWithDefault(new List<string>())
+                .Call(customCss => otherPages => favicon => postsTitle => posts => indexFile => siteTitle =>
                 {
                     Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
@@ -50,15 +55,35 @@ A very simple static website generator written in C#.")
                     // TODO - Impelement Css file handling
                     // CreateCssSection (customCss) ;
 
-                    CreateHtmlPage(
-                        markdownFile: indexFile,
-                        includeFavicon: favicon,
-                        includePosts: posts,
-                        postsTitle: postsTitle,
-                        siteTitle: siteTitle,
-                        css: customCss,
-                        isIndex: true
-                    );
+                    Console.WriteLine(
+                        CreateHtmlPage(
+                            otherPages: otherPages,
+                            markdownFile: indexFile,
+                            includeFavicon: favicon,
+                            includePosts: posts,
+                            postsTitle: postsTitle,
+                            siteTitle: siteTitle,
+                            css: customCss.Count() == 0 ? new List<string>(){defaultCss} : customCss,
+                            isIndex: true)
+                        );
+
+                    otherPages.IfNotEmpty(() =>
+                    {
+                        foreach (var page in otherPages)
+                        {
+                            Console.WriteLine(
+                                CreateHtmlPage(
+                                    otherPages: otherPages,
+                                    markdownFile: page,
+                                    includeFavicon: favicon,
+                                    includePosts: posts,
+                                    postsTitle: postsTitle,
+                                    siteTitle: siteTitle,
+                                    css: customCss.Count() == 0 ? new List<string>(){defaultCss} : customCss,
+                                    isIndex: false)
+                                );
+                        }
+                    });
 
                     posts.IfTrue(() =>
                     {
@@ -66,7 +91,8 @@ A very simple static website generator written in C#.")
                             includeFavicon: favicon,
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
-                            css: customCss
+                            otherPages: otherPages,
+                            css: customCss.Count() == 0 ? new List<string>(){defaultCss} : customCss
                         );
                     });
 
@@ -75,34 +101,62 @@ A very simple static website generator written in C#.")
                 .Parse(args);
         }
 
-        private static void CreateHtmlPage(string markdownFile, bool includeFavicon, bool includePosts, string postsTitle, string siteTitle, string css, bool isIndex = false)
+        private static string CreateHtmlPage(
+            string markdownFile,
+            bool includeFavicon,
+            bool includePosts,
+            string postsTitle,
+            string siteTitle,
+            IReadOnlyList<string> otherPages,
+            IReadOnlyList<string> css,
+            bool isIndex = false)
         {
-            string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", markdownFile);
-            string contentMarkdown = File.ReadAllText(contentFilename);
-            var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-            string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
+            string htmlIndex = string.Empty;
 
-            var htmlIndex = GetPageHtml(
-                siteTitle: siteTitle,
-                html: contentHtml,
-                includeFavicon: includeFavicon,
-                includePosts: includePosts,
-                postsTitle: postsTitle,
-                css: css
-            );
+            try
+            {
+                string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", markdownFile);
+                string contentMarkdown = File.ReadAllText(contentFilename);
+                var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+                string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
 
-            File.WriteAllText(
-                Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "output",
-                    isIndex == true ?
-                        "index.html" :
-                        Path.GetFileNameWithoutExtension(markdownFile) + ".html"
-                    ),
-                    htmlIndex);
+                htmlIndex = GetPageHtml(
+                    otherPages: otherPages,
+                    siteTitle: siteTitle,
+                    html: contentHtml,
+                    includeFavicon: includeFavicon,
+                    includePosts: includePosts,
+                    postsTitle: postsTitle,
+                    isPosts: false,
+                    css: css
+                );
+            }
+            catch(Exception ex)
+            {
+                return @$"Failed to read markdown file {markdownFile} due to: {ex.Message}";
+            }
+            finally
+            {
+                File.WriteAllText(
+                    Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "output",
+                        isIndex == true ?
+                            "index.html" :
+                            Path.GetFileNameWithoutExtension(markdownFile) + ".html"
+                        ),
+                        htmlIndex);
+            }
+
+            return @$"Created Html from Markdown file {markdownFile}";
         }
 
-        private static void CreateHtmlPostPages(bool includeFavicon, string postsTitle, string siteTitle, string css)
+        private static void CreateHtmlPostPages(
+            bool includeFavicon,
+            string postsTitle,
+            string siteTitle,
+            IReadOnlyList<string> otherPages,
+            IReadOnlyList<string> css)
         {
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
 
@@ -115,7 +169,7 @@ A very simple static website generator written in C#.")
                 string postHtml = Markdown.ToHtml(postMarkdown, postPipeline);
                 var postHtmlFile = Path.GetFileNameWithoutExtension(postfile) + ".html";
 
-                Console.WriteLine($"..adding post for {postfile}...");
+                Console.WriteLine($"...adding post for {postfile}...");
 
                 HtmlDocument doc = new HtmlDocument();
                 doc.LoadHtml(postHtml);
@@ -131,11 +185,14 @@ A very simple static website generator written in C#.")
                 <hr align=""left"">
 ";
 
-                var htmlPost = GetPostHtml(
+                var htmlPost = GetPageHtml(
+                    otherPages: otherPages,
                     siteTitle: siteTitle,
-                    postsTitle: postsTitle,
                     html: postHtml,
                     includeFavicon: includeFavicon,
+                    includePosts: true,
+                    postsTitle: postsTitle,
+                    isPosts: true,
                     css: css
                 );
 
@@ -150,11 +207,13 @@ A very simple static website generator written in C#.")
             }
 
             var htmlPosts = GetPageHtml(
+                otherPages: otherPages,
                 siteTitle: siteTitle,
                 html: postsIndexHtml,
                 includeFavicon: includeFavicon,
                 includePosts: true,
                 postsTitle: postsTitle,
+                isPosts: false,
                 css: css
             );
 
@@ -176,12 +235,19 @@ A very simple static website generator written in C#.")
             {
                 Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
                 CopyDirectory(
-                sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
-                targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
-            );
+                    sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
+                    targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
+                );
             }
 
-
+            if (Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "input", "fonts")))
+            {
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "fonts"));
+                CopyDirectory(
+                    sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "fonts"),
+                    targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "fonts")
+                );
+            }
         }
 
         private static void CopyDirectory(string sourceDirectory, string targetDirectory)
@@ -211,106 +277,115 @@ A very simple static website generator written in C#.")
         }
 
         private static string GetPageHtml(
+            IReadOnlyList<string> otherPages,
+            IReadOnlyList<string> css,
             string siteTitle = "",
             string html = "",
             bool includeFavicon = false,
             bool includePosts = false,
             string postsTitle = "",
-            string css = defaultCss
-            ) =>
+            bool isPosts = false
+        ) =>
 @$"<!DOCTYPE html>
 <html>
     <head>
         <style>
-            {pageFontCss}
+            {GetFontCss(isPosts: false)}
             {css}
         </style>
         <title>{siteTitle}</title>
         {(includeFavicon == true ?
 @$"     <link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">" : string.Empty)}
-        {(
+        {GetNavigationHtml(
+            siteTitle: siteTitle,
+            css: css,
+            includePosts: includePosts,
+            postsTitle: postsTitle,
+            otherPages: otherPages,
+            isPosts: isPosts)}
+        {GetThemeMenuHtml(css)}
+    </head>
+    <body>
+        <div class=""content"">
+            {html}
+        </div>
+    </body>
+</html> ";
+
+        private static string GetNavigationHtml(
+            IReadOnlyList<string> otherPages,
+            IReadOnlyList<string> css,
+            string siteTitle,
+            bool includePosts,
+            string postsTitle,
+            bool isPosts)
+        {
+            var otherPagesHtml = string.Empty;
+
+            foreach (var page in otherPages)
+            {
+                otherPagesHtml += @$"         <a href=""{(isPosts ==  true ? ".." : ".")}/{Path.GetFileNameWithoutExtension(page)}.html"">{Path.GetFileNameWithoutExtension(page)}</a>
+    ";
+            }
+
+            var resultHtml =
+                @$"
+{(
 @$"<div class=""navigation"">
-        <a href=""./index.html"">{siteTitle}</a>
-        {(includePosts == true ?
-@$"         <a href=""./posts.html"">{postsTitle}</a>
-            {themeHtml}
+            <a href=""{(isPosts ==  true ? ".." : ".")}/index.html"">{siteTitle}</a>
+    {(includePosts == true ?
+@$"         <a href=""{(isPosts ==  true ? ".." : ".")}/posts.html"">{postsTitle}</a>
+            {otherPagesHtml}
+            {GetThemeMenuHtml(css)}
         </div>
 " : @$"
-        {themeHtml}
+        {otherPagesHtml}
+        {GetThemeMenuHtml(css)}
         </div>")}
-")}
-        {themeHtml}
-    </head>
-    <body>
-        <div class=""content"">
-            {html}
-        </div>
-    </body>
-</html> ";
+")}";
 
-        private static string GetPostHtml(
-            string siteTitle = "",
-            string postsTitle = "",
-            string html = "",
-            bool includeFavicon = false,
-            string css = defaultCss
-            ) =>
-@$"<!DOCTYPE html>
-<html>
-    <head>
-        <style>
-            {postsFontCss}
-            {css}
-        </style>
-        <title>{siteTitle}</title>
-        {(includeFavicon == true ?
-@$"     <link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">" : string.Empty)}
-        <div class=""navigation"">
-            <a href=""../index.html"">{siteTitle}</a>
-            <a href=""../posts.html"">{postsTitle}</a>
-        </div>
-        {themeHtml}
-    </head>
-    <body>
-        <div class=""content"">
-            {html}
-        </div>
-    </body>
-</html> ";
+            return resultHtml;
+        }
 
-        private const string themeHtml = "";/*@"
+        private static string GetFontCss(bool isPosts)
+        => @$"
+@font-face {{
+    font-family: Inconsolata; src: url(""{(isPosts ==  true ? ".." : ".")}/fonts/Inconsolata-Regular.ttf"");
+}}
+    body {{
+         font-family: Inconsolata
+}}
+";
+
+        private static string GetThemeMenuHtml(IReadOnlyList<string> css)
+        {
+            string resultHtml =string.Empty;
+
+            if (css.Count > 0)
+            {
+                resultHtml = @$"
         <div class=""dropdown"">
             <button class=""dropdownbutton"">Theme</button>
             <div class=""dropdown-content"">
-                <a href=""#"">Link 1</a>
-                <a href=""#"">Link 2</a>
-                <a href=""#"">Link 3</a>
-            </div>
+";
+
+                foreach (var theme in css)
+                {
+                    resultHtml += @$"<a href=""index-{theme}.html"">{theme}</a>
+";
+                }
+
+                resultHtml += @$"            </div>
         </div>
         ";
-        */
+            }
 
-        private const string pageFontCss = @"
-@font-face {
-    font-family: Inconsolata; src: url(""./fonts/Inconsolata-Regular.ttf"");
-}
-    body {
-         font-family: Inconsolata
-}
-";
-
-private const string postsFontCss = @"
-@font-face {
-    font-family: Inconsolata; src: url(""../fonts/Inconsolata-Regular.ttf"");
-}
-    body {
-         font-family: Inconsolata
-}
-";
+            return resultHtml;
+        }
 
 
-        private const string defaultCss = @"
-.navigation {
+        private static string defaultCss =
+@".navigation {
     overflow: hidden;
     position: fixed;
     top: 0px;
@@ -318,12 +393,12 @@ private const string postsFontCss = @"
     padding-left: 40%;
     width: 100%;
     align-items: center;
-    background-color: #333;
+    background-color: #fcf7f0;
 }
 
 .navigation a {
     float: left;
-    color: #f2f2f2;
+    color: #5e5e5e;
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
@@ -395,7 +470,33 @@ head {
     margin-left: 0;
 }
 
+h1 {
+    color: #333333;
+}
+
+h2 {
+    color: #333333;
+}
+
+h3 {
+    color: #333333;
+}
+
+h4 {
+    color: #333333;
+}
+
+h5 {
+    color: #333333;
+}
+
+h6 {
+    color: #333333;
+}
+
 body {
+    background-color: #fcf7f0;
+    color: #5e5e5e;
     margin-left: 0;
     padding-top: 0;
 }";

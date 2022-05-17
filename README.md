@@ -49,6 +49,7 @@ Below represents the minimum that markerator expects in order to create a valid 
 
 ### Site including Posts and a favicon
 Example including a posts section and a favicon.
+
 #### Folder Layout
 ```
 /input/images/favicon.ico
@@ -70,6 +71,7 @@ Example including a posts section and a favicon.
 - [x] Post Generation
 - [x] App versioning
 - [x] Custom fonts
+- [x] Multiple Page creation for more than just index.html and Posts
 
 ## Todo
 - [ ] Custom Css loading
@@ -78,6 +80,5 @@ Example including a posts section and a favicon.
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Page footers
-- [ ] Multiple Page creation for more than just index.html and Posts
 - [ ] Better exception/error handling and user feedback
 - [ ] Include markerator in Github CI

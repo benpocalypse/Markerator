@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace com.github.benpocalypse
 {
@@ -14,6 +15,14 @@ namespace com.github.benpocalypse
         {
             if (val == false)
                 then();
+        }
+
+        public static void IfNotEmpty<T>(this IReadOnlyList<T> list, Action then)
+        {
+            if (list.Count > 0)
+            {
+                then();
+            }
         }
     }
 }
