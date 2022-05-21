@@ -63,7 +63,7 @@ A very simple static website generator written in C#.")
                             includePosts: posts,
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
-                            css: customCss.Count() == 0 ? new List<string>(){defaultCss} : customCss,
+                            css: customCss.Count() == 0 ? new List<string>(){"default"} : customCss,
                             isIndex: true)
                         );
 
@@ -79,7 +79,7 @@ A very simple static website generator written in C#.")
                                     includePosts: posts,
                                     postsTitle: postsTitle,
                                     siteTitle: siteTitle,
-                                    css: customCss.Count() == 0 ? new List<string>(){defaultCss} : customCss,
+                                    css: customCss.Count() == 0 ? new List<string>(){"default"} : customCss,
                                     isIndex: false)
                                 );
                         }
@@ -92,7 +92,7 @@ A very simple static website generator written in C#.")
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
                             otherPages: otherPages,
-                            css: customCss.Count() == 0 ? new List<string>(){defaultCss} : customCss
+                            css: customCss.Count() == 0 ? new List<string>(){"default"} : customCss
                         );
                     });
 
@@ -291,7 +291,7 @@ A very simple static website generator written in C#.")
     <head>
         <style>
             {GetFontCss(isPosts: false)}
-            {css}
+            {(css[0].Equals("default") ? defaultCss : css[0])} // FIXME - css[0] is wrong for non-default Css
         </style>
         <title>{siteTitle}</title>
         {(includeFavicon == true ?
@@ -357,11 +357,11 @@ A very simple static website generator written in C#.")
 }}
 ";
 
-        private static string GetThemeMenuHtml(IReadOnlyList<string> css)
+        private static string GetThemeMenuHtml(IReadOnlyList<string> themeNames)
         {
-            string resultHtml =string.Empty;
+            string resultHtml = string.Empty;
 
-            if (css.Count > 0)
+            if (themeNames.Count > 0 && !themeNames[0].Equals("default"))
             {
                 resultHtml = @$"
         <div class=""dropdown"">
@@ -369,7 +369,7 @@ A very simple static website generator written in C#.")
             <div class=""dropdown-content"">
 ";
 
-                foreach (var theme in css)
+                foreach (var theme in themeNames)
                 {
                     resultHtml += @$"<a href=""index-{theme}.html"">{theme}</a>
 ";
