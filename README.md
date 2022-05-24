@@ -12,7 +12,7 @@ Any platform that .NET 5 or newer supports.
 ## Usage
 ```
 usage: markerator -h
-A static website generator written in C#.
+A very simple static website generator written in C#/.Net.
 
 -t|--title       The title of the website. Examples: Markerator Generated Site, 
                  zombo.com
@@ -75,10 +75,19 @@ Example including a posts section and a favicon.
 
 ## Todo
 - [ ] Custom Css loading
-	- [ ] Custom font loading
+	- [ ] Css validation
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Page footers
 - [ ] Better exception/error handling and user feedback
 - [ ] Include markerator in Github CI
+
+# Credits
+Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:
+
+* [FluentResult](https://github.com/altmann/FluentResults)
+* [FluentArgs](https://github.com/kutoga/FluentArgs)
+* [Markdig](https://github.com/xoofx/markdig)
+* [HtmlAgilityPack](https://github.com/zzzprojects/html-agility-pack)
+

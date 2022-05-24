@@ -2,6 +2,7 @@
 using System.IO;
 using Markdig;
 using FluentArgs;
+using FluentResults;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Collections.Generic;
@@ -10,12 +11,12 @@ namespace com.github.benpocalypse
 {
     public class markerator
     {
-        private static string _version = "0.1.0";
+        private static string _version = "0.1.2";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
                 .DefaultConfigsWithAppDescription(@$"Markerator v{_version}.
-A very simple static website generator written in C#.")
+A very simple static website generator written in C#/.Net")
                 .RegisterHelpFlag("-h", "--help")
                 .Parameter<string>("-t", "--title")
                     .WithDescription("The title of the website.")
@@ -42,18 +43,17 @@ A very simple static website generator written in C#.")
                     .WithDescription("Additional pages that should be linked from the navigation bar, provided as a list of .md files.")
                     .WithExamples("About.md,Contact.md")
                     .IsOptionalWithDefault(new List<string>())
-                .ListParameter<string>("-c", "--css")
+                .Parameter<string>("-c", "--css")
                     .WithDescription("Inlude custom CSS file that will theme the generated site.")
                     .WithExamples("LightTheme.css", "DarkTheme.css")
-                    .IsOptionalWithDefault(new List<string>())
+                    .IsOptionalWithDefault("")
                 .Call(customCss => otherPages => favicon => postsTitle => posts => indexFile => siteTitle =>
                 {
                     Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
                     CreateOutputDirectories();
 
-                    // TODO - Impelement Css file handling
-                    // CreateCssSection (customCss) ;
+                    var css = GetCustomCssContents (customCss) ;
 
                     Console.WriteLine(
                         CreateHtmlPage(
@@ -63,7 +63,9 @@ A very simple static website generator written in C#.")
                             includePosts: posts,
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
-                            css: customCss.Count() == 0 ? new List<string>(){"default"} : customCss,
+                            css: customCss == string.Empty ?
+                                new List<string>(){"default"} :
+                                new List<string>(){css.ValueOrDefault},
                             isIndex: true)
                         );
 
@@ -79,7 +81,9 @@ A very simple static website generator written in C#.")
                                     includePosts: posts,
                                     postsTitle: postsTitle,
                                     siteTitle: siteTitle,
-                                    css: customCss.Count() == 0 ? new List<string>(){"default"} : customCss,
+                                    css: customCss == string.Empty ?
+                                        new List<string>(){"default"} :
+                                        new List<string>(){css.ValueOrDefault},
                                     isIndex: false)
                                 );
                         }
@@ -92,13 +96,23 @@ A very simple static website generator written in C#.")
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
                             otherPages: otherPages,
-                            css: customCss.Count() == 0 ? new List<string>(){"default"} : customCss
+                            css: customCss == string.Empty ?
+                                new List<string>(){"default"} :
+                                new List<string>(){css.ValueOrDefault}
                         );
                     });
 
                     Console.WriteLine($"...site generation successful.");
                 })
                 .Parse(args);
+        }
+
+        private static Result<string> GetCustomCssContents(string cssFilenames)
+        {
+            return Result.Try(() =>
+            {
+                // TODO - Open and parse files, or Result.Fail if they aren't found/parsed correctly.
+            });
         }
 
         private static string CreateHtmlPage(
@@ -177,7 +191,7 @@ A very simple static website generator written in C#.")
                 var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
                 var postHtmlSummary = doc.DocumentNode.SelectNodes("//p").FirstOrDefault().InnerText;
 
-                // TODO - Support images/cards for post summaries.
+                // TODO - Maybe? support images/cards for post summaries.
 
                 postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle} - {File.GetCreationTime(postfile)}
                 <p>{postHtmlSummary}</p>
@@ -276,6 +290,7 @@ A very simple static website generator written in C#.")
             }
         }
 
+// FIXME - css[0] is wrong for non-default Css
         private static string GetPageHtml(
             IReadOnlyList<string> otherPages,
             IReadOnlyList<string> css,
@@ -290,8 +305,8 @@ A very simple static website generator written in C#.")
 <html>
     <head>
         <style>
-            {GetFontCss(isPosts: false)}
-            {(css[0].Equals("default") ? defaultCss : css[0])} // FIXME - css[0] is wrong for non-default Css
+            {GetFontCss(isPosts: isPosts)}
+            {(css[0].Equals("default") ? defaultCss : css[0])}
         </style>
         <title>{siteTitle}</title>
         {(includeFavicon == true ?
@@ -331,10 +346,11 @@ A very simple static website generator written in C#.")
             var resultHtml =
                 @$"
 {(
-@$"<div class=""navigation"">
+@$" <div class=""navigation"">
             <a href=""{(isPosts ==  true ? ".." : ".")}/index.html"">{siteTitle}</a>
-    {(includePosts == true ?
-@$"         <a href=""{(isPosts ==  true ? ".." : ".")}/posts.html"">{postsTitle}</a>
+{(includePosts == true ?
+@$"
+            <a href=""{(isPosts ==  true ? ".." : ".")}/posts.html"">{postsTitle}</a>
             {otherPagesHtml}
             {GetThemeMenuHtml(css)}
         </div>
@@ -384,8 +400,8 @@ A very simple static website generator written in C#.")
         }
 
 
-        private static string defaultCss =
-@".navigation {
+        private static string defaultCss = @"
+.navigation {
     overflow: hidden;
     position: fixed;
     top: 0px;
@@ -458,7 +474,6 @@ A very simple static website generator written in C#.")
     color: #515151;
     text-align: left;
     text-decoration: none;
-    font-size: 12px;
 }
 
 .content a:hover {
