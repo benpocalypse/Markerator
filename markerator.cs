@@ -346,8 +346,10 @@ A very simple static website generator written in C#/.Net")
             var resultHtml =
                 @$"
 {(
-@$" <div class=""navigation"">
+@$" <div class=""navigation-title"">
             <a href=""{(isPosts ==  true ? ".." : ".")}/index.html"">{siteTitle}</a>
+    </div>
+    <div class=""navigation"">
 {(includePosts == true ?
 @$"
             <a href=""{(isPosts ==  true ? ".." : ".")}/posts.html"">{postsTitle}</a>
@@ -401,10 +403,30 @@ A very simple static website generator written in C#/.Net")
 
 
         private static string defaultCss = @"
-.navigation {
+.navigation-title {
     overflow: hidden;
     position: fixed;
     top: 0px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #fcf7f0;
+}
+
+.navigation-title a {
+    float: left;
+    color: #2e2e2e;
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 22px;
+}
+
+.navigation {
+    overflow: hidden;
+    position: fixed;
+    top: 35px;
     margin-left: 0;
     padding-left: 40%;
     width: 100%;
@@ -416,13 +438,12 @@ A very simple static website generator written in C#/.Net")
     float: left;
     color: #5e5e5e;
     text-align: center;
-    padding: 14px 16px;
+    padding: 10px 16px;
     text-decoration: none;
     font-size: 16px;
 }
 
 .navigation a:hover {
-    background-color: #ddd;
     color: black;
 }
 
@@ -457,16 +478,22 @@ A very simple static website generator written in C#/.Net")
     display: block;
 }
 
-.dropdown-content a:hover { background-color: #ddd; }
+.dropdown-content a:hover {
+    background-color: #ddd;
+}
 
-.dropdown:hover .dropdown-content { display: block; }
+.dropdown:hover .dropdown-content {
+    display: block;
+}
 
-.dropdown:hover .dropbtn { background-color: #3e8e41; }
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
 
 .content {
     padding-left: 20%;
     padding-right: 20%;
-    padding-top: 30px;
+    padding-top: 40px;
     padding-bottom: 100px;
 }
 
@@ -477,7 +504,6 @@ A very simple static website generator written in C#/.Net")
 }
 
 .content a:hover {
-    background-color: #ddd;
     color: black;
 }
 
@@ -486,27 +512,27 @@ head {
 }
 
 h1 {
-    color: #333333;
+    color: #5e5e5e;
 }
 
 h2 {
-    color: #333333;
+    color: #5e5e5e;
 }
 
 h3 {
-    color: #333333;
+    color: #5e5e5e;
 }
 
 h4 {
-    color: #333333;
+    color: #5e5e5e;
 }
 
 h5 {
-    color: #333333;
+    color: #5e5e5e;
 }
 
 h6 {
-    color: #333333;
+    color: #5e5e5e;
 }
 
 body {
