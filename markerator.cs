@@ -6,6 +6,7 @@ using FluentResults;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Collections.Generic;
+using ExCSS;
 
 namespace com.github.benpocalypse
 {
@@ -44,7 +45,7 @@ A very simple static website generator written in C#/.Net")
                     .WithExamples("About.md,Contact.md")
                     .IsOptionalWithDefault(new List<string>())
                 .Parameter<string>("-c", "--css")
-                    .WithDescription("Inlude custom CSS file that will theme the generated site.")
+                    .WithDescription("Inlude a custom CSS file that will theme the generated site.")
                     .WithExamples("LightTheme.css", "DarkTheme.css")
                     .IsOptionalWithDefault("")
                 .Call(customCss => otherPages => favicon => postsTitle => posts => indexFile => siteTitle =>
@@ -53,7 +54,7 @@ A very simple static website generator written in C#/.Net")
 
                     CreateOutputDirectories();
 
-                    var css = GetCustomCssContents (customCss) ;
+                    var css = GetCustomCssContents (customCss);
 
                     Console.WriteLine(
                         CreateHtmlPage(
@@ -111,7 +112,26 @@ A very simple static website generator written in C#/.Net")
         {
             return Result.Try(() =>
             {
-                // TODO - Open and parse files, or Result.Fail if they aren't found/parsed correctly.
+                var parser = new StylesheetParser();
+                string cssFilePath = Path.Combine(Directory.GetCurrentDirectory(), "input", cssFilenames);
+                string cssContent = File.ReadAllText(cssFilePath);
+                var stylesheet = parser.Parse(cssContent);
+
+                // TOD - More validation of style contents, please.
+                var rules = stylesheet.StyleRules;//.First() as StyleRule;
+
+                foreach (var rule in rules)
+                {
+                    if (rule.SelectorText != ".navigation-title" ||
+                        rule.SelectorText != ".navigation" ||
+                        rule.SelectorText != ".content" ||
+                        rule.SelectorText!= "body")
+                        {
+                            Result.Fail(defaultCss);
+                        }
+                }
+
+                Result.Ok(cssContent);
             });
         }
 
