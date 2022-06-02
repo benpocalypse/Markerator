@@ -56,6 +56,12 @@ A very simple static website generator written in C#/.Net")
 
                     var css = GetCustomCssContents (customCss);
 
+                    css.IsFailed.IfTrue(() =>
+                    {
+                        Console.WriteLine("Failed to parse custom css, using default instead.");
+                        css = Result.Ok(defaultCss);
+                    });
+
                     Console.WriteLine(
                         CreateHtmlPage(
                             otherPages: otherPages,
@@ -64,9 +70,7 @@ A very simple static website generator written in C#/.Net")
                             includePosts: posts,
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
-                            css: customCss == string.Empty ?
-                                new List<string>(){"default"} :
-                                new List<string>(){css.ValueOrDefault},
+                            css: css.Value,
                             isIndex: true)
                         );
 
@@ -82,9 +86,7 @@ A very simple static website generator written in C#/.Net")
                                     includePosts: posts,
                                     postsTitle: postsTitle,
                                     siteTitle: siteTitle,
-                                    css: customCss == string.Empty ?
-                                        new List<string>(){"default"} :
-                                        new List<string>(){css.ValueOrDefault},
+                                    css: css.Value,
                                     isIndex: false)
                                 );
                         }
@@ -97,9 +99,7 @@ A very simple static website generator written in C#/.Net")
                             postsTitle: postsTitle,
                             siteTitle: siteTitle,
                             otherPages: otherPages,
-                            css: customCss == string.Empty ?
-                                new List<string>(){"default"} :
-                                new List<string>(){css.ValueOrDefault}
+                            css: css.Value
                         );
                     });
 
@@ -110,28 +110,34 @@ A very simple static website generator written in C#/.Net")
 
         private static Result<string> GetCustomCssContents(string cssFilenames)
         {
-            return Result.Try(() =>
+            return Result.Try<string>(() =>
             {
+                if (cssFilenames.Equals(string.Empty))
+                {
+                    return defaultCss;
+                }
+
                 var parser = new StylesheetParser();
                 string cssFilePath = Path.Combine(Directory.GetCurrentDirectory(), "input", cssFilenames);
                 string cssContent = File.ReadAllText(cssFilePath);
                 var stylesheet = parser.Parse(cssContent);
 
-                // TOD - More validation of style contents, please.
-                var rules = stylesheet.StyleRules;//.First() as StyleRule;
-
-                foreach (var rule in rules)
+                foreach (var rule in stylesheet.StyleRules)
                 {
-                    if (rule.SelectorText != ".navigation-title" ||
-                        rule.SelectorText != ".navigation" ||
-                        rule.SelectorText != ".content" ||
-                        rule.SelectorText!= "body")
+                    if (!rule.SelectorText.Contains(".navigation-title") &&
+                        !rule.SelectorText.Contains(".navigation") &&
+                        !rule.SelectorText.Contains(".content") &&
+                        !rule.SelectorText.Contains("head") &&
+                        !rule.SelectorText.Contains("body") &&
+                        !rule.SelectorText.Contains("h"))
                         {
-                            Result.Fail(defaultCss);
+                            Console.WriteLine("Returning default Css.");
+                            throw new Exception($"Failed to parse {cssFilenames}.");
                         }
                 }
 
-                Result.Ok(cssContent);
+                Console.WriteLine("Returning custom Css.");
+                return cssContent;
             });
         }
 
@@ -142,7 +148,7 @@ A very simple static website generator written in C#/.Net")
             string postsTitle,
             string siteTitle,
             IReadOnlyList<string> otherPages,
-            IReadOnlyList<string> css,
+            string css,
             bool isIndex = false)
         {
             string htmlIndex = string.Empty;
@@ -154,6 +160,7 @@ A very simple static website generator written in C#/.Net")
                 var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
                 string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
 
+
                 htmlIndex = GetPageHtml(
                     otherPages: otherPages,
                     siteTitle: siteTitle,
@@ -164,6 +171,7 @@ A very simple static website generator written in C#/.Net")
                     isPosts: false,
                     css: css
                 );
+
             }
             catch(Exception ex)
             {
@@ -190,7 +198,7 @@ A very simple static website generator written in C#/.Net")
             string postsTitle,
             string siteTitle,
             IReadOnlyList<string> otherPages,
-            IReadOnlyList<string> css)
+            string css)
         {
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
 
@@ -313,7 +321,7 @@ A very simple static website generator written in C#/.Net")
 // FIXME - css[0] is wrong for non-default Css
         private static string GetPageHtml(
             IReadOnlyList<string> otherPages,
-            IReadOnlyList<string> css,
+            string css,
             string siteTitle = "",
             string html = "",
             bool includeFavicon = false,
@@ -326,7 +334,7 @@ A very simple static website generator written in C#/.Net")
     <head>
         <style>
             {GetFontCss(isPosts: isPosts)}
-            {(css[0].Equals("default") ? defaultCss : css[0])}
+            {css}
         </style>
         <title>{siteTitle}</title>
         {(includeFavicon == true ?
@@ -338,7 +346,7 @@ A very simple static website generator written in C#/.Net")
             postsTitle: postsTitle,
             otherPages: otherPages,
             isPosts: isPosts)}
-        {GetThemeMenuHtml(css)}
+        {GetThemeMenuHtml(new List<string>())}
     </head>
     <body>
         <div class=""content"">
@@ -349,7 +357,7 @@ A very simple static website generator written in C#/.Net")
 
         private static string GetNavigationHtml(
             IReadOnlyList<string> otherPages,
-            IReadOnlyList<string> css,
+            string css,
             string siteTitle,
             bool includePosts,
             string postsTitle,
@@ -374,11 +382,11 @@ A very simple static website generator written in C#/.Net")
 @$"
             <a href=""{(isPosts ==  true ? ".." : ".")}/posts.html"">{postsTitle}</a>
             {otherPagesHtml}
-            {GetThemeMenuHtml(css)}
+            {GetThemeMenuHtml(new List<string>())}
         </div>
 " : @$"
         {otherPagesHtml}
-        {GetThemeMenuHtml(css)}
+        {GetThemeMenuHtml(new List<string>())}
         </div>")}
 ")}";
 

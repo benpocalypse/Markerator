@@ -72,22 +72,24 @@ Example including a posts section and a favicon.
 - [x] App versioning
 - [x] Custom fonts
 - [x] Multiple Page creation for more than just index.html and Posts
+- [x] Custom Css loading
+	- [x] Basic Css validation
 
 ## Todo
-- [ ] Custom Css loading
-	- [ ] Css validation
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Page footers
 - [ ] Better exception/error handling and user feedback
 - [ ] Include markerator in Github CI
+- [ ] Advanced Css validation
 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:
 
-* [FluentResult](https://github.com/altmann/FluentResults)
-* [FluentArgs](https://github.com/kutoga/FluentArgs)
-* [Markdig](https://github.com/xoofx/markdig)
-* [HtmlAgilityPack](https://github.com/zzzprojects/html-agility-pack)
+* [FluentResult](https://github.com/altmann/FluentResults) - Exception handling shouldn't be control flow.
+* [FluentArgs](https://github.com/kutoga/FluentArgs) - The best CLI argument handling library around.
+* [Markdig](https://github.com/xoofx/markdig) - Converting markdown to Html couldn't be easier.
+* [HtmlAgilityPack](https://github.com/zzzprojects/html-agility-pack) - Peeking at Html made dead simple.
+* [ExCss](https://github.com/TylerBrinks/ExCSS) - Peeking at Css made dead simple.
 
