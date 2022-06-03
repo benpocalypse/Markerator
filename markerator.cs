@@ -12,7 +12,7 @@ namespace com.github.benpocalypse
 {
     public class markerator
     {
-        private static string _version = "0.1.2";
+        private static string _version = "0.2.0";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
@@ -54,7 +54,7 @@ A very simple static website generator written in C#/.Net")
 
                     CreateOutputDirectories();
 
-                    var css = GetCustomCssContents (customCss);
+                    var css = ValidateAndGetCustomCssContents (customCss);
 
                     css.IsFailed.IfTrue(() =>
                     {
@@ -108,7 +108,7 @@ A very simple static website generator written in C#/.Net")
                 .Parse(args);
         }
 
-        private static Result<string> GetCustomCssContents(string cssFilenames)
+        private static Result<string> ValidateAndGetCustomCssContents(string cssFilenames)
         {
             return Result.Try<string>(() =>
             {
@@ -318,7 +318,6 @@ A very simple static website generator written in C#/.Net")
             }
         }
 
-// FIXME - css[0] is wrong for non-default Css
         private static string GetPageHtml(
             IReadOnlyList<string> otherPages,
             string css,
@@ -353,6 +352,7 @@ A very simple static website generator written in C#/.Net")
             {html}
         </div>
     </body>
+    {GetFooterHtml()}
 </html> ";
 
         private static string GetNavigationHtml(
@@ -429,6 +429,13 @@ A very simple static website generator written in C#/.Net")
             return resultHtml;
         }
 
+        private static string GetFooterHtml()
+        =>
+@$"
+    <footer>
+        <p>Site generated with <a href=""https://github.com/benpocalypse/Markerator"">Markerator</a>.</p>
+    </footer>
+";
 
         private static string defaultCss = @"
 .navigation-title {
@@ -568,6 +575,14 @@ body {
     color: #5e5e5e;
     margin-left: 0;
     padding-top: 0;
+}
+
+footer {
+    text-align: center;
+    padding: 6px;
+    background-color: #fcf7f0;
+    color: #5e5e5e;
+    font-size: 12px;
 }";
     }
 }
