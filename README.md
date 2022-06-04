@@ -74,12 +74,12 @@ Example including a posts section and a favicon.
 - [x] Multiple Page creation for more than just index.html and Posts
 - [x] Custom Css loading
 	- [x] Basic Css validation
+- [x] Page footers
 
 ## Todo
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
-- [ ] Page footers
 - [ ] Better exception/error handling and user feedback
 - [ ] Include markerator in Github CI
 - [ ] Advanced Css validation
