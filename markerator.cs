@@ -12,7 +12,7 @@ namespace com.github.benpocalypse
 {
     public class markerator
     {
-        private static string _version = "0.2.0";
+        private static string _version = "0.2.1";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
@@ -202,9 +202,13 @@ A very simple static website generator written in C#/.Net")
         {
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
 
-            string postsIndexHtml = @$"<h1>{postsTitle}</h1>" + System.Environment.NewLine;
+            string postsIndexHtml = @$"<h2>{postsTitle}</h2>" + System.Environment.NewLine;
 
-            foreach (var postfile in Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "input", "posts")))
+            var postFiles = Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "input", "posts")).OrderByDescending(f => File.GetCreationTime(f)).ToArray();
+
+            string currentYear = "0000";
+
+            foreach (var postfile in postFiles)
             {
                 string postMarkdown = File.ReadAllText(postfile);
                 var postPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
@@ -219,13 +223,21 @@ A very simple static website generator written in C#/.Net")
                 var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
                 var postHtmlSummary = doc.DocumentNode.SelectNodes("//p").FirstOrDefault().InnerText;
 
-                // TODO - Maybe? support images/cards for post summaries.
+                if (!currentYear.Equals(File.GetCreationTime(postfile).ToString("yyyy")))
+                {
+                    currentYear = File.GetCreationTime(postfile).ToString("yyyy");
+                    postsIndexHtml += @$"<h3>{currentYear}</h3>
+                    ";
+                }
 
-                postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{postHtmlTitle} - {File.GetCreationTime(postfile)}
-                <p>{postHtmlSummary}</p>
-                </a>
-                <hr align=""left"">
+                // TODO - Maybe? support images/cards for post summaries, or perhaps some sort of custom formatting?
+                //      - Or allow some CLI options to show summaries under links, etc?
+
+                postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{File.GetCreationTime(postfile).ToString("dddd, MMMM dd")} - {postHtmlTitle}</a>
+                <br/>
+                <br/>
 ";
+// <p>{postHtmlSummary}</p>
 
                 var htmlPost = GetPageHtml(
                     otherPages: otherPages,
