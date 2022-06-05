@@ -32,7 +32,7 @@ A very simple static website generator written in C#/.Net.
 ```
 
 ## Examples
-In order for markerator to correctly process your markdown input files, it expects a pre-determined folder layout, with a number of folders/files inside it. It will then process the input files and if successful put the result Html site into the `/output` folder.
+In order for markerator to correctly process your markdown input files, it expects a pre-determined folder layout, with a number of folders/files inside it. It will then process the input files and if successful put the resulting Html site into the `/output` folder.
 
 ### Minimal Site
 Below represents the minimum that markerator expects in order to create a valid Html website.
@@ -61,7 +61,7 @@ Example including a posts section and a favicon.
 
 #### Commandline
 ```
-./markerator --title Bengineering --indexFile index.md --favicon true -posts true
+./markerator --title Bengineering --indexFile index.md --favicon true --posts true
 ```
 
 ## Features
