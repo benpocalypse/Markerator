@@ -1,0 +1,97 @@
+.boobs { }
+
+.navigation-title {
+    overflow: hidden;
+    position: fixed;
+    top: 0px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #000000;
+}
+
+.navigation-title a {
+    float: left;
+    color: grey;
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 22px;
+}
+
+.navigation {
+    overflow: hidden;
+    position: fixed;
+    top: 35px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #000000;
+}
+
+.navigation a {
+    float: left;
+    color: #000000;
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.navigation a:hover {
+    color: #ffffff;
+}
+
+.content {
+    padding-left: 20%;
+    padding-right: 20%;
+    padding-top: 40px;
+    padding-bottom: 100px;
+}
+
+.content a {
+    color: grey;
+    text-align: left;
+    text-decoration: none;
+}
+
+.content a:hover {
+    color: #000000;
+}
+
+head {
+    margin-left: 0;
+}
+
+h1 {
+    color: #ffffff;
+}
+
+h2 {
+    color: #ffffff;
+}
+
+h3 {
+    color: #ffffff;
+}
+
+h4 {
+    color: #ffffff;
+}
+
+h5 {
+    color: #ffffff;
+}
+
+h6 {
+    color: #ffffff;
+}
+
+body {
+    background-color: #000000;
+    color: #ffffff;
+    margin-left: 0;
+    padding-top: 0;
+}

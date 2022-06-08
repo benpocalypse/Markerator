@@ -83,6 +83,7 @@ Example including a posts section and a favicon.
 - [ ] Better exception/error handling and user feedback
 - [ ] Include markerator in Github CI
 - [ ] Advanced Css validation
+- [ ] Custom footers
 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:

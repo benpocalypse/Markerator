@@ -233,7 +233,7 @@ A very simple static website generator written in C#/.Net")
                 // TODO - Maybe? support images/cards for post summaries, or perhaps some sort of custom formatting?
                 //      - Or allow some CLI options to show summaries under links, etc?
 
-                postsIndexHtml += @$"<a href=""posts/{postHtmlFile}"">{File.GetCreationTime(postfile).ToString("dddd, MMMM dd")} - {postHtmlTitle}</a>
+                postsIndexHtml += @$"&emsp;<a href=""posts/{postHtmlFile}"">{File.GetCreationTime(postfile).ToString("MM/dd")} - {postHtmlTitle}</a>
                 <br/>
                 <br/>
 ";
