@@ -84,6 +84,7 @@ Example including a posts section and a favicon.
 - [ ] Include markerator in Github CI
 - [ ] Advanced Css validation
 - [ ] Custom footers
+- [ ] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:
