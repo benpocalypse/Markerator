@@ -464,7 +464,7 @@ A very simple static website generator written in C#/.Net")
 
 .navigation-title a {
     float: left;
-    color: #2e2e2e;
+    color: #8c2c2c;
     text-align: center;
     padding: 10px 16px;
     text-decoration: none;
@@ -484,7 +484,7 @@ A very simple static website generator written in C#/.Net")
 
 .navigation a {
     float: left;
-    color: #5e5e5e;
+    color: #8c2c2c;
     text-align: center;
     padding: 10px 16px;
     text-decoration: none;
@@ -546,7 +546,7 @@ A very simple static website generator written in C#/.Net")
 }
 
 .content a {
-    color: #515151;
+    color: #8c2c2c;
     text-align: left;
     text-decoration: none;
 }
