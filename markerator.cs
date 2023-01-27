@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Markdig;
 using FluentArgs;
@@ -12,7 +12,7 @@ namespace com.github.benpocalypse
 {
     public class markerator
     {
-        private static string _version = "0.2.2";
+        private static string _version = "0.2.3";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
@@ -493,6 +493,17 @@ A very simple static website generator written in C#/.Net")
 
 .navigation a:hover {
     color: black;
+}
+
+table, th, td {
+  border: 0px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .dropdownbutton {
