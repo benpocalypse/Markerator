@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Markdig;
 using FluentArgs;
@@ -12,7 +12,7 @@ namespace com.github.benpocalypse
 {
     public class markerator
     {
-        private static string _version = "0.2.3";
+        private static string _version = "0.2.4";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
@@ -502,8 +502,8 @@ table, th, td {
 th, td {
   padding-top: 10px;
   padding-bottom: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 0px;
+  padding-right: 20px;
 }
 
 .dropdownbutton {
