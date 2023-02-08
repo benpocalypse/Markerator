@@ -75,13 +75,13 @@ Example including a posts section and a favicon.
 - [x] Custom Css loading
 	- [x] Basic Css validation
 - [x] Page footers
+- [x] Include markerator in Github CI
 
 ## Todo
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Better exception/error handling and user feedback
-- [ ] Include markerator in Github CI
 - [ ] Advanced Css validation
 - [ ] Custom footers
 - [ ] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
