@@ -10,9 +10,9 @@ using ExCSS;
 
 namespace com.github.benpocalypse
 {
-    public class markerator
+    public class Markerator
     {
-        private static string _version = "0.2.4";
+        private readonly static string _version = "0.2.4";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
@@ -217,7 +217,7 @@ A very simple static website generator written in C#/.Net")
 
                 Console.WriteLine($"...adding post for {postfile}...");
 
-                HtmlDocument doc = new HtmlDocument();
+                var doc = new HtmlDocument();
                 doc.LoadHtml(postHtml);
 
                 var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
@@ -450,7 +450,7 @@ A very simple static website generator written in C#/.Net")
     </footer>
 ";
 
-        private static string defaultCss = @"
+        private readonly static string defaultCss = @"
 .navigation-title {
     overflow: hidden;
     position: fixed;
