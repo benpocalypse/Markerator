@@ -1,5 +1,5 @@
 # Markerator
-A very simple static website generator written in C#/.Net. I created this mainly because I was disappointed at the sheer complexity of any of the existing static site generators I was able to find. No offense to anyone creating web content, but to me, things have gotten far too complex to create even an MVP website. I plan to dogfood markerator for my own website once it reaches a minimum level of maturity. And yes, I realize the logo is very immature.
+A very simple static website generator written in C#/.Net. I created this mainly because I was disappointed at the sheer complexity of any of the existing static site generators I was able to find. No offense to anyone creating web content, but to me, things have gotten far too complex to create even a minimal website. I plan to dogfood markerator for my own website once it reaches a minimum level of maturity. And yes, I realize the logo is very immature.
 
 ![Markerator Logo](docs/images/markerator_logo_small.png)
 
@@ -64,6 +64,12 @@ Example including a posts section and a favicon.
 ./markerator --title Bengineering --indexFile index.md --favicon true --posts true
 ```
 
+### A note about Posts
+As of the 0.2.5 version of Markerator, if your side includes Posts/News markdown files, there is a new option that can be used. If the entry in your markdown file is of headine H1, and is formatted to contain any valid `DateTime` in it, then Markerator will generate a Posts/News page for you that organizes the posts by their given dates. If this H1 section is ommitted, then Markerator will just categorize Posts/News as "All" in that section of the generated site.
+
+#### Known Bugs
+At the moment, the Posts/News section is sorted internally by File Creation Time, so even if they contain valid and ordered `DateTime` values, they will still be listed by File Creation Date in the generated Posts/News section. This should be addressed in a following update.
+
 ## Features
 - [x] Markdown input processing (via Markdig)
 - [x] Html interception/injection (via HtmlAgilityPack)
@@ -85,6 +91,7 @@ Example including a posts section and a favicon.
 - [ ] Advanced Css validation
 - [ ] Custom footers
 - [ ] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
+- [ ] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand.
 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:

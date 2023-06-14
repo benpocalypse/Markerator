@@ -12,7 +12,7 @@ namespace com.github.benpocalypse
 {
     public class Markerator
     {
-        private readonly static string _version = "0.2.4";
+        private readonly static string _version = "0.2.5";
         static void Main(string[] args)
         {
             FluentArgsBuilder.New()
@@ -35,7 +35,7 @@ A very simple static website generator written in C#/.Net")
                 .Parameter<string>("-pt", "--postsTitle")
                     .WithDescription("The title that the posts section should use.")
                     .WithExamples("News", "Updates", "Blog")
-                    .IsOptionalWithDefault("Posts")
+                    .IsOptionalWithDefault("Posts") 
                 .Parameter<bool>("-f", "--favicon")
                     .WithDescription("Whether or not the site should use a favicon.ico file in the /input/images directory.")
                     .WithExamples("true", "false")
@@ -206,7 +206,8 @@ A very simple static website generator written in C#/.Net")
 
             var postFiles = Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "input", "posts")).OrderByDescending(f => File.GetCreationTime(f)).ToArray();
 
-            string currentYear = "0000";
+            string currentYear = "All";
+            bool currentYearUpdated = false;
 
             foreach (var postfile in postFiles)
             {
@@ -220,20 +221,27 @@ A very simple static website generator written in C#/.Net")
                 var doc = new HtmlDocument();
                 doc.LoadHtml(postHtml);
 
-                var postHtmlTitle = doc.DocumentNode.SelectNodes("//h1").FirstOrDefault().InnerText;
-                var postHtmlSummary = doc.DocumentNode.SelectNodes("//p").FirstOrDefault().InnerText;
+                string? postDate = doc.DocumentNode.SelectNodes("//h1")?.First()?.InnerText;
+                var postHtmlTitle = doc.DocumentNode.SelectNodes("//h2")?.First()?.InnerText;
+                var postHtmlSummary = doc.DocumentNode.SelectNodes("//p")?.First()?.InnerText;
 
-                if (!currentYear.Equals(File.GetCreationTime(postfile).ToString("yyyy")))
+                if (DateTime.TryParse(postDate, out var postDateTime) && !currentYear.Equals(postDateTime.ToString("yyyy")))
                 {
-                    currentYear = File.GetCreationTime(postfile).ToString("yyyy");
+                    currentYear = postDateTime.ToString("yyyy");
+                    currentYearUpdated = true;
+                }
+
+                if (currentYearUpdated || currentYear.Equals("All"))
+                {
                     postsIndexHtml += @$"<h3>{currentYear}</h3>
                     ";
+                    currentYearUpdated = false;
                 }
 
                 // TODO - Maybe? support images/cards for post summaries, or perhaps some sort of custom formatting?
                 //      - Or allow some CLI options to show summaries under links, etc?
 
-                postsIndexHtml += @$"&emsp;<a href=""posts/{postHtmlFile}"">{File.GetCreationTime(postfile).ToString("MM/dd")} - {postHtmlTitle}</a><br/>
+                postsIndexHtml += @$"&emsp;<a href=""posts/{postHtmlFile}"">{(!postDateTime.Equals(DateTime.MinValue) ? postDateTime.ToString("MM/dd") + " - " : string.Empty)}{postHtmlTitle}</a><br/>
 &emsp;{postHtmlSummary}
 <br/>
 <br/>
@@ -307,8 +315,8 @@ A very simple static website generator written in C#/.Net")
 
         private static void CopyDirectory(string sourceDirectory, string targetDirectory)
         {
-            DirectoryInfo diSource = new DirectoryInfo(sourceDirectory);
-            DirectoryInfo diTarget = new DirectoryInfo(targetDirectory);
+            var diSource = new DirectoryInfo(sourceDirectory);
+            var diTarget = new DirectoryInfo(targetDirectory);
 
             CopyAll(diSource, diTarget);
         }
