@@ -91,7 +91,8 @@ At the moment, the Posts/News section is sorted internally by File Creation Time
 - [ ] Advanced Css validation
 - [ ] Custom footers
 - [ ] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
-- [ ] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand.
+- [ ] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand
+- [ ] Add RSS feed support 
 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:
