@@ -13,7 +13,7 @@ namespace com.github.benpocalypse.markerator;
 
 public partial class Markerator
 {
-    private readonly static string _version = "0.3.0";
+    private readonly static string _version = "0.3.1";
 
     static void Main(string[] args)
     {
@@ -440,7 +440,7 @@ A very simple static website generator written in C#/.Net")
     <div class=""navigation"">
 {(includePosts == true ?
 @$"
-            <a href=""{(isPosts ==  true ? ".." : ".")}/posts.html"">{postsTitle}</a>
+            <a href=""{(isPosts ==  true ? ".." : ".")}/{postsTitle}.html"">{postsTitle}</a>
             {otherPagesHtml}
             {GetThemeMenuHtml(new List<string>())}
         </div>
