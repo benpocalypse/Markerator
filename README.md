@@ -12,10 +12,12 @@ Any platform that .NET 5 or newer supports.
 ## Usage
 ```
 usage: markerator -h
-A very simple static website generator written in C#/.Net.
+A very simple static website generator written in C#/.Net
 
 -t|--title       The title of the website. Examples: Markerator Generated Site, 
                  zombo.com
+-u|--url         The base Url of the website, omitting the trailing slash. 
+                 Examples: https://www.slashdot.org, https://elementary.io
 -i|--indexFile   The markdown file that is to be converted into the index.html 
                  file. Examples: mainFile.md, radicalText.md
 -p|--posts       Optional with default 'False'. Whether or not the site should 
@@ -23,12 +25,21 @@ A very simple static website generator written in C#/.Net.
                  Examples: true, false
 -pt|--postsTitle Optional with default 'Posts'. The title that the posts 
                  section should use. Examples: News, Updates, Blog
+-rss|-rssFeed    Optional with default 'False'. Whether or not to generate Rss 
+                 feeds from your posts/news/blog pages. Examples: true, false
 -f|--favicon     Optional with default 'False'. Whether or not the site should 
                  use a favicon.ico file in the /input/images directory. 
                  Examples: true, false
--c|--css         Optional with default ''. Inlude custom CSS file that will 
+-op|--otherPages Optional with default 
+                 'System.Collections.Generic.List`1[System.String]'. Additional 
+                 pages that should be linked from the navigation bar, provided 
+                 as a comma separated list of .md files. Examples: 
+                 About.md,Contact.mdMultiple values can be used by joining them 
+                 with any of the following separators: ; ,
+-c|--css         Optional with default ''. Inlude a custom CSS file that will 
                  theme the generated site. Examples: LightTheme.css, 
                  DarkTheme.css
+
 ```
 
 ## Examples
@@ -68,7 +79,7 @@ Example including a posts section and a favicon.
 As of the 0.2.5 version of Markerator, if your side includes Posts/News markdown files, there is a new option that can be used. If the entry in your markdown file is of headine H1, and is formatted to contain any valid `DateTime` in it, then Markerator will generate a Posts/News page for you that organizes the posts by their given dates. If this H1 section is ommitted, then Markerator will just categorize Posts/News as "All" in that section of the generated site.
 
 #### Known Bugs
-At the moment, the Posts/News section is sorted internally by File Creation Time, so even if they contain valid and ordered `DateTime` values, they will still be listed by File Creation Date in the generated Posts/News section. This should be addressed in a following update.
+- [x] ~~At the moment, the Posts/News section is sorted internally by File Creation Time, so even if they contain valid and ordered `DateTime` values, they will still be listed by File Creation Date in the generated Posts/News section. This should be addressed in a following update.~~
 
 ## Features
 - [x] Markdown input processing (via Markdig)
@@ -82,6 +93,8 @@ At the moment, the Posts/News section is sorted internally by File Creation Time
 	- [x] Basic Css validation
 - [x] Page footers
 - [x] Include markerator in Github CI
+- [x] Add RSS feed support 
+- [x] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand
 
 ## Todo
 - [ ] Theme selection
@@ -91,8 +104,8 @@ At the moment, the Posts/News section is sorted internally by File Creation Time
 - [ ] Advanced Css validation
 - [ ] Custom footers
 - [ ] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
-- [ ] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand
-- [ ] Add RSS feed support 
+
+
 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:

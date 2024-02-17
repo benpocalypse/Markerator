@@ -6,14 +6,14 @@ using FluentResults;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Collections.Generic;
-using ExCSS;
 using com.github.benpocalypse.markerator.helpers;
+using System.Collections.Immutable;
 
 namespace com.github.benpocalypse.markerator;
 
-public class Markerator
+public partial class Markerator
 {
-    private readonly static string _version = "0.2.6";
+    private readonly static string _version = "0.3.0";
 
     static void Main(string[] args)
     {
@@ -24,6 +24,10 @@ A very simple static website generator written in C#/.Net")
             .Parameter<string>("-t", "--title")
                 .WithDescription("The title of the website.")
                 .WithExamples("Markerator Generated Site", "zombo.com")
+                .IsRequired()
+            .Parameter<Uri>("-u", "--url")
+                .WithDescription("The base Url of the website, omitting the trailing slash.")
+                .WithExamples("https://www.slashdot.org", "https://elementary.io")
                 .IsRequired()
             .Parameter<string>("-i", "--indexFile")
                 .WithDescription("The markdown file that is to be converted into the index.html file.")
@@ -37,31 +41,35 @@ A very simple static website generator written in C#/.Net")
             .Parameter<string>("-pt", "--postsTitle")
                 .WithDescription("The title that the posts section should use.")
                 .WithExamples("News", "Updates", "Blog")
-                .IsOptionalWithDefault("Posts") 
+                .IsOptionalWithDefault("Posts")
+            .Parameter<bool>("-rss", "-rssFeed")
+                .WithDescription("Whether or not to generate Rss feeds from your posts/news/blog pages.")
+                .WithExamples("true", "false")
+                .IsOptionalWithDefault(false)
             .Parameter<bool>("-f", "--favicon")
                 .WithDescription("Whether or not the site should use a favicon.ico file in the /input/images directory.")
                 .WithExamples("true", "false")
                 .IsOptionalWithDefault(false)
             .ListParameter<string>("-op", "--otherPages")
-                .WithDescription("Additional pages that should be linked from the navigation bar, provided as a list of .md files.")
+                .WithDescription("Additional pages that should be linked from the navigation bar, provided as a comma separated list of .md files.")
                 .WithExamples("About.md,Contact.md")
                 .IsOptionalWithDefault(new List<string>())
             .Parameter<string>("-c", "--css")
                 .WithDescription("Inlude a custom CSS file that will theme the generated site.")
                 .WithExamples("LightTheme.css", "DarkTheme.css")
                 .IsOptionalWithDefault("")
-            .Call(customCss => otherPages => favicon => postsTitle => posts => indexFile => siteTitle =>
+            .Call(customCss => otherPages => favicon => rss => postsTitle => posts => indexFile => baseUrl => siteTitle =>
             {
                 Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
                 CreateOutputDirectories();
 
-                var css = ValidateAndGetCustomCssContents(customCss);
+                var css = CssValidator.ValidateAndGetCustomCssContents(customCss);
 
                 css.IsFailed.IfTrue(() =>
                 {
                     Console.WriteLine("Failed to parse custom css, using default css instead.");
-                    css = Result.Ok(defaultCss);
+                    css = Result.Ok(DefaultCss);
                 });
 
                 // Create index.html
@@ -96,54 +104,23 @@ A very simple static website generator written in C#/.Net")
                     }
                 });
 
-                // ...and if there are any "news/posts" pages, add those as well.
+                // ...and if there are any "news/posts}/projects" pages, add those as well.
                 posts.IfTrue(() =>
                 {
-                    CreateHtmlPostPages(
+                    var postCollection = CreateHtmlPostPages(
                         includeFavicon: favicon,
                         postsTitle: postsTitle,
                         siteTitle: siteTitle,
                         otherPages: otherPages,
                         css: css.Value
                     );
+
+                    RssGenerator.GenerateRssFeed(postsTitle, "This is a test", baseUrl, postCollection);
                 });
 
                 Console.WriteLine($"...site generation successful.");
             })
             .Parse(args);
-    }
-
-    private static Result<string> ValidateAndGetCustomCssContents(string cssFilenames)
-    {
-        return Result.Try<string>(() =>
-        {
-            if (cssFilenames.Equals(string.Empty))
-            {
-                return defaultCss;
-            }
-
-            var parser = new StylesheetParser();
-            string cssFilePath = Path.Combine(Directory.GetCurrentDirectory(), "input", cssFilenames);
-            string cssContent = File.ReadAllText(cssFilePath);
-            var stylesheet = parser.Parse(cssContent);
-
-            foreach (var rule in stylesheet.StyleRules)
-            {
-                if (!rule.SelectorText.Contains(".navigation-title") &&
-                    !rule.SelectorText.Contains(".navigation") &&
-                    !rule.SelectorText.Contains(".content") &&
-                    !rule.SelectorText.Contains("head") &&
-                    !rule.SelectorText.Contains("body") &&
-                    !rule.SelectorText.Contains("h"))
-                    {
-                        Console.WriteLine("Returning default Css.");
-                        throw new Exception($"Failed to parse {cssFilenames}.");
-                    }
-            }
-
-            Console.WriteLine("Returning custom Css.");
-            return cssContent;
-        });
     }
 
     private static string CreateHtmlPage(
@@ -227,23 +204,26 @@ A very simple static website generator written in C#/.Net")
         return postOrder.Reverse();
     }
 
-    private static void CreateHtmlPostPages(
+    private static IEnumerable<Post> CreateHtmlPostPages(
         bool includeFavicon,
         string postsTitle,
         string siteTitle,
         IReadOnlyList<string> otherPages,
         string css)
     {
-        Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "posts"));
+        ImmutableList<Post> postsCollection = ImmutableList<Post>.Empty;
+
+        Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", postsTitle));
 
         string postsIndexHtml = @$"<h2>{postsTitle}</h2>" + System.Environment.NewLine;
 
-        var postFiles = Directory.GetFiles(Path.Combine(Directory.GetCurrentDirectory(), "input", "posts"));
+        var path = Path.Combine(Directory.GetCurrentDirectory(), "input", postsTitle);
+
+        var postFiles = Directory.GetFiles(path);
         
         var postOrder = GetPostOrder(postFiles);
         var postOrderIterator = postOrder.GetEnumerator();
 
-        string currentYear = "All";
         string previousYear = "All";
 
         while (postOrderIterator.MoveNext())
@@ -261,6 +241,22 @@ A very simple static website generator written in C#/.Net")
             string? postDate = doc.DocumentNode.SelectNodes("//h1")?.First()?.InnerText;
             var postHtmlTitle = doc.DocumentNode.SelectNodes("//h2")?.First()?.InnerText;
             var postHtmlSummary = doc.DocumentNode.SelectNodes("//p")?.First()?.InnerText;
+            var paragraphElements = doc.DocumentNode.SelectNodes("//p")?.Elements();
+            var postHtmlContents = paragraphElements?.Skip(1).Take(paragraphElements?.Count() ?? 1);
+
+            string contents = string.Empty;
+            
+            if (postHtmlContents is not null)
+            {
+                foreach (var post in postHtmlContents)
+                {
+                    contents += post.InnerText + System.Environment.NewLine;
+                }
+            }
+
+            postsCollection = postsCollection.Add(new Post(Path.GetFileNameWithoutExtension(postOrderIterator.Current.Value), DateTime.Parse(postDate ?? DateTime.Now.ToString()) , postHtmlTitle ?? string.Empty, postHtmlSummary ?? string.Empty, contents));
+
+            string currentYear;
 
             if (DateTime.TryParse(postDate, out var postDateTime) && !postDateTime.Equals(DateTime.MinValue))
             {
@@ -271,8 +267,6 @@ A very simple static website generator written in C#/.Net")
                 currentYear = "All";
             }
 
-            Console.WriteLine($"CurrentYear2: {currentYear}");
-
             if (currentYear != previousYear)
             {
                 postsIndexHtml += @$"<h3>{currentYear}</h3>
@@ -282,12 +276,12 @@ A very simple static website generator written in C#/.Net")
 
             // TODO - Maybe? support images/cards for post summaries, or perhaps some sort of custom formatting?
             //      - Or allow some CLI options to show summaries under links, etc?
-
             postsIndexHtml += @$"&emsp;<a href=""posts/{postHtmlFile}"">{(!postDateTime.Equals(DateTime.MinValue) ? postDateTime.ToString("MM/dd") + " - " : string.Empty)}{postHtmlTitle}</a><br/>
 &emsp;{postHtmlSummary}
 <br/>
 <br/>
 ";
+
 // TODO - Implement this
 // <p>{postHtmlSummary}</p>
 
@@ -306,7 +300,7 @@ A very simple static website generator written in C#/.Net")
                 Path.Combine(
                     Directory.GetCurrentDirectory(),
                     "output",
-                    "posts",
+                    $@"{postsTitle}",
                     postHtmlFile
                     ),
                 htmlPost);
@@ -327,9 +321,11 @@ A very simple static website generator written in C#/.Net")
             Path.Combine(
                 Directory.GetCurrentDirectory(),
                 "output",
-                "posts.html"
+                $@"{postsTitle}.html"
                 ),
             htmlPosts);
+
+        return postsCollection as IEnumerable<Post>;
     }
 
     private static void CreateOutputDirectories()
@@ -400,7 +396,7 @@ A very simple static website generator written in C#/.Net")
             {css}
         </style>
         <title>{siteTitle}</title>
-        {(includeFavicon == true ?
+        {(includeFavicon is true ?
 @$"     <link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">" : string.Empty)}
         {GetNavigationHtml(
             siteTitle: siteTitle,
@@ -500,163 +496,4 @@ A very simple static website generator written in C#/.Net")
         <p>Site generated with <a href=""https://github.com/benpocalypse/Markerator"">Markerator v{_version}</a>.</p>
     </footer>
 ";
-
-    private readonly static string defaultCss = @"
-.navigation-title {
-    overflow: hidden;
-    position: fixed;
-    top: 0px;
-    margin-left: 0;
-    padding-left: 40%;
-    width: 100%;
-    align-items: center;
-    background-color: #fcf7f0;
-}
-
-.navigation-title a {
-    float: left;
-    color: #8c2c2c;
-    text-align: center;
-    padding: 10px 16px;
-    text-decoration: none;
-    font-size: 22px;
-}
-
-.navigation {
-    overflow: hidden;
-    position: fixed;
-    top: 35px;
-    margin-left: 0;
-    padding-left: 40%;
-    width: 100%;
-    align-items: center;
-    background-color: #fcf7f0;
-}
-
-.navigation a {
-    float: left;
-    color: #8c2c2c;
-    text-align: center;
-    padding: 10px 16px;
-    text-decoration: none;
-    font-size: 16px;
-}
-
-.navigation a:hover {
-    color: black;
-}
-
-table, th, td {
-  border: 0px solid black;
-  border-collapse: collapse;
-}
-th, td {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  padding-left: 0px;
-  padding-right: 20px;
-}
-
-.dropdownbutton {
-    background-color: #333;
-    color: #f2f2f2;
-    font-size: 16px;
-    padding: 6px;
-    padding-right: 40px;
-    border: none;
-}
-
-.dropdown {
-    position: relative;
-    display: inline-block;
-    float: right;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f1f1f1;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
-}
-
-.dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
-
-.dropdown-content a:hover {
-    background-color: #ddd;
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-.dropdown:hover .dropbtn {
-    background-color: #3e8e41;
-}
-
-.content {
-    padding-left: 20%;
-    padding-right: 20%;
-    padding-top: 40px;
-    padding-bottom: 100px;
-}
-
-.content a {
-    color: #8c2c2c;
-    text-align: left;
-    text-decoration: none;
-}
-
-.content a:hover {
-    color: black;
-}
-
-head {
-    margin-left: 0;
-}
-
-h1 {
-    color: #5e5e5e;
-}
-
-h2 {
-    color: #5e5e5e;
-}
-
-h3 {
-    color: #5e5e5e;
-}
-
-h4 {
-    color: #5e5e5e;
-}
-
-h5 {
-    color: #5e5e5e;
-}
-
-h6 {
-    color: #5e5e5e;
-}
-
-body {
-    background-color: #fcf7f0;
-    color: #5e5e5e;
-    margin-left: 0;
-    padding-top: 0;
-}
-
-footer {
-    text-align: center;
-    padding: 6px;
-    background-color: #fcf7f0;
-    color: #5e5e5e;
-    font-size: 12px;
-}";
 }
