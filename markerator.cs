@@ -13,7 +13,7 @@ namespace com.github.benpocalypse.markerator;
 
 public partial class Markerator
 {
-    private readonly static string _version = "0.3.1";
+    private readonly static string _version = "0.4.0";
 
     static void Main(string[] args)
     {
@@ -42,8 +42,12 @@ A very simple static website generator written in C#/.Net")
                 .WithDescription("The title that the posts section should use.")
                 .WithExamples("News", "Updates", "Blog")
                 .IsOptionalWithDefault("Posts")
-            .Parameter<bool>("-rss", "-rssFeed")
+            .Parameter<bool>("-rss", "--rssFeed")
                 .WithDescription("Whether or not to generate Rss feeds from your posts/news/blog pages.")
+                .WithExamples("true", "false")
+                .IsOptionalWithDefault(false)
+            .Parameter<bool>("-ri", "--rssIcon")
+                .WithDescription("If set to true, and an icon named 'rss.jpg' or 'rss.png' exists in the /images folder, then an icon link will be created that links to each pages Rss feed.")
                 .WithExamples("true", "false")
                 .IsOptionalWithDefault(false)
             .Parameter<bool>("-f", "--favicon")
@@ -58,10 +62,14 @@ A very simple static website generator written in C#/.Net")
                 .WithDescription("Inlude a custom CSS file that will theme the generated site.")
                 .WithExamples("LightTheme.css", "DarkTheme.css")
                 .IsOptionalWithDefault("")
-            .Call(customCss => otherPages => favicon => rss => postsTitle => posts => indexFile => baseUrl => siteTitle =>
+            .Call(customCss => otherPages => favicon => rssIcon => rss => postsTitle => posts => indexFile => baseUrl => siteTitle =>
             {
+                var result = $"...site generation successful.";
+                var success = true;
+
                 Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
+                DeleteOutputDirectorsIfExists();
                 CreateOutputDirectories();
 
                 var css = CssValidator.ValidateAndGetCustomCssContents(customCss);
@@ -104,21 +112,53 @@ A very simple static website generator written in C#/.Net")
                     }
                 });
 
-                // ...and if there are any "news/posts}/projects" pages, add those as well.
+                var rssImageFilename = RssGenerator.GetRssImageFilename();
+
+                // ...and if there are any "news/posts/projects" pages, add those as well.
                 posts.IfTrue(() =>
                 {
+                    if (rss == true && rssIcon == false)
+                    {
+                        success = false;
+                        result = $"...site generation failed. If Rss generation is true, and rssIcon must be specified.";
+                    }
+                    else
+                    {
+                        if (rss == false && rssIcon == true)
+                        {
+                            success = false;
+                            result = $"...site generation failed. An rssIcon should not be included if Rss generation isn't true.";
+                        }
+                        else
+                        {
+                            RssGenerator.VerifyRssImageExistsInOutput().IfFalse(() =>
+                            {
+                                success = false;
+                                result = $"...site generation failed. An rssIcon was not found. Please ensure you have a file named either 'rss.png' or 'rss.jpg' in your input/images folder.";
+                            });
+                        }
+                    }
+
                     var postCollection = CreateHtmlPostPages(
                         includeFavicon: favicon,
                         postsTitle: postsTitle,
                         siteTitle: siteTitle,
                         otherPages: otherPages,
+                        rss: rss,
+                        rssImage: rssImageFilename,
                         css: css.Value
                     );
 
-                    RssGenerator.GenerateRssFeed(postsTitle, "This is a test", baseUrl, postCollection);
+
+                    if (success == true && rss == true && rssIcon == true)
+                    {
+                        // TODO - this will need to account for multiple posts/news/blogs/projects in the future.
+                        RssGenerator.GenerateRssFeed(postsTitle, siteTitle, baseUrl, postCollection);
+                    }
                 });
 
-                Console.WriteLine($"...site generation successful.");
+                Console.WriteLine(result);
+                success.IfFalse(() => DeleteOutputDirectorsIfExists());
             })
             .Parse(args);
     }
@@ -209,13 +249,21 @@ A very simple static website generator written in C#/.Net")
         string postsTitle,
         string siteTitle,
         IReadOnlyList<string> otherPages,
+        bool rss,
+        string rssImage,
         string css)
     {
         ImmutableList<Post> postsCollection = ImmutableList<Post>.Empty;
 
         Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", postsTitle));
 
-        string postsIndexHtml = @$"<h2>{postsTitle}</h2>" + System.Environment.NewLine;
+        string postsIndexHtml = @$"<h2>{postsTitle}";
+
+        postsIndexHtml += rss == true ?
+            @$"   <a href=""{postsTitle}/{postsTitle}.xml"">
+        <img src=""{rssImage}"" alt=""Rss icon"">
+    </a>
+</h2>" : @$"</h2>";
 
         var path = Path.Combine(Directory.GetCurrentDirectory(), "input", postsTitle);
 
@@ -328,6 +376,14 @@ A very simple static website generator written in C#/.Net")
         return postsCollection as IEnumerable<Post>;
     }
 
+    private static void DeleteOutputDirectorsIfExists()
+    {
+        if (Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output")))
+        {
+            Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "output"), true);
+        }
+    }
+
     private static void CreateOutputDirectories()
     {
         // TODO: Spit out a message about what the actual proper directory structure for input should look like.
@@ -398,6 +454,8 @@ A very simple static website generator written in C#/.Net")
         <title>{siteTitle}</title>
         {(includeFavicon is true ?
 @$"     <link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">" : string.Empty)}
+    </head>
+    <body>
         {GetNavigationHtml(
             siteTitle: siteTitle,
             css: css,
@@ -406,13 +464,11 @@ A very simple static website generator written in C#/.Net")
             otherPages: otherPages,
             isPosts: isPosts)}
         {GetThemeMenuHtml(new List<string>())}
-    </head>
-    <body>
         <div class=""content"">
             {html}
         </div>
+        {GetFooterHtml()}
     </body>
-    {GetFooterHtml()}
 </html> ";
 
     private static string GetNavigationHtml(

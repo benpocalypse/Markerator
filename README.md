@@ -25,8 +25,12 @@ A very simple static website generator written in C#/.Net
                  Examples: true, false
 -pt|--postsTitle Optional with default 'Posts'. The title that the posts 
                  section should use. Examples: News, Updates, Blog
--rss|-rssFeed    Optional with default 'False'. Whether or not to generate Rss 
+-rss|--rssFeed   Optional with default 'False'. Whether or not to generate Rss 
                  feeds from your posts/news/blog pages. Examples: true, false
+-ri|--rssIcon    Optional with default 'False'. If set to true, and an icon 
+                 named 'rss.jpg' or 'rss.png' exists in the /images folder, 
+                 then an icon link will be created that links to each pages Rss 
+                 feed. Examples: true, false
 -f|--favicon     Optional with default 'False'. Whether or not the site should 
                  use a favicon.ico file in the /input/images directory. 
                  Examples: true, false
@@ -76,7 +80,7 @@ Example including a posts section and a favicon.
 ```
 
 ### A note about Posts
-As of the 0.2.5 version of Markerator, if your side includes Posts/News markdown files, there is a new option that can be used. If the entry in your markdown file is of headine H1, and is formatted to contain any valid `DateTime` in it, then Markerator will generate a Posts/News page for you that organizes the posts by their given dates. If this H1 section is ommitted, then Markerator will just categorize Posts/News as "All" in that section of the generated site.
+As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Projects markdown files, there is a new option that can be used. If the entry in your markdown file is of headine H1, and is formatted to contain any valid `DateTime` in it, then Markerator will generate a Posts/News/Blog/Projects page for you that organizes the posts by their given dates. If this H1 section is ommitted, then Markerator will just categorize Posts/News as "All" in that section of the generated site.
 
 #### Known Bugs
 - [x] ~~At the moment, the Posts/News section is sorted internally by File Creation Time, so even if they contain valid and ordered `DateTime` values, they will still be listed by File Creation Date in the generated Posts/News section. This should be addressed in a following update.~~
@@ -94,7 +98,8 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News markdown
 - [x] Page footers
 - [x] Include markerator in Github CI
 - [x] Add RSS feed support 
-- [x] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand
+	- [x] Rss icon is now shown on the Posts/News/Blog/Projects pages, linking to the Rss feed
+- [x] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand.
 
 ## Todo
 - [ ] Theme selection

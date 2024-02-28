@@ -38,4 +38,35 @@ public static class RssGenerator
 
         return feed;
     }
+
+    public static bool VerifyRssImageExistsInOutput()
+    {
+        if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")) ||
+            File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg"))
+           )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public static string GetRssImageFilename()
+    {
+        var filename = string.Empty;
+
+        if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")))
+        {
+            filename = "images/rss.png";
+        }
+
+        if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg")))
+        {
+            filename = "images/rss.jpg";
+        }
+
+        return filename;
+    }
 }
