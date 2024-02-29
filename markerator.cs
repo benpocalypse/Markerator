@@ -13,7 +13,7 @@ namespace com.github.benpocalypse.markerator;
 
 public partial class Markerator
 {
-    private readonly static string _version = "0.4.0";
+    private readonly static string _version = "0.4.1";
 
     static void Main(string[] args)
     {
@@ -69,7 +69,7 @@ A very simple static website generator written in C#/.Net")
 
                 Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
-                DeleteOutputDirectorsIfExists();
+                //DeleteOutputDirectorsIfExists();
                 CreateOutputDirectories();
 
                 var css = CssValidator.ValidateAndGetCustomCssContents(customCss);
@@ -158,7 +158,7 @@ A very simple static website generator written in C#/.Net")
                 });
 
                 Console.WriteLine(result);
-                success.IfFalse(() => DeleteOutputDirectorsIfExists());
+                //success.IfFalse(() => DeleteOutputDirectorsIfExists());
             })
             .Parse(args);
     }
