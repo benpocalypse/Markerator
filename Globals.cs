@@ -2,8 +2,10 @@
 
 namespace com.github.benpocalypse.markerator;
 
-public partial class Markerator
+public static class Globals
 {
+    public readonly static string Version = "0.4.2";
+
     public readonly static string DefaultCss = @"
 .navigation-title {
     overflow: hidden;

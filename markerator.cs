@@ -13,12 +13,10 @@ namespace com.github.benpocalypse.markerator;
 
 public partial class Markerator
 {
-    private readonly static string _version = "0.4.1";
-
     static void Main(string[] args)
     {
         FluentArgsBuilder.New()
-            .DefaultConfigsWithAppDescription(@$"Markerator v{_version}.
+            .DefaultConfigsWithAppDescription(@$"Markerator v{Globals.Version}.
 A very simple static website generator written in C#/.Net")
             .RegisterHelpFlag("-h", "--help")
             .Parameter<string>("-t", "--title")
@@ -38,10 +36,10 @@ A very simple static website generator written in C#/.Net")
                 .WithDescription("Whether or not the site should include a posts link (like a news or updates section.)")
                 .WithExamples("true", "false")
                 .IsOptionalWithDefault(false)
-            .Parameter<string>("-pt", "--postsTitle")
-                .WithDescription("The title that the posts section should use.")
-                .WithExamples("News", "Updates", "Blog")
-                .IsOptionalWithDefault("Posts")
+            .ListParameter<string>("-pt", "--postsTitle")
+                .WithDescription("A single title, or comma separated list of titles, that represents a link to each section of the site that will be a 'feed.' Each postsTitle specified should have a corresponding folder that contains one or more Markdown files.")
+                .WithExamples("News", "Updates", "Blog, Projects")
+                .IsOptionalWithDefault(default(List<string>))
             .Parameter<bool>("-rss", "--rssFeed")
                 .WithDescription("Whether or not to generate Rss feeds from your posts/news/blog pages.")
                 .WithExamples("true", "false")
@@ -57,7 +55,7 @@ A very simple static website generator written in C#/.Net")
             .ListParameter<string>("-op", "--otherPages")
                 .WithDescription("Additional pages that should be linked from the navigation bar, provided as a comma separated list of .md files.")
                 .WithExamples("About.md,Contact.md")
-                .IsOptionalWithDefault(new List<string>())
+                .IsOptionalWithDefault(default(List<string>))
             .Parameter<string>("-c", "--css")
                 .WithDescription("Inlude a custom CSS file that will theme the generated site.")
                 .WithExamples("LightTheme.css", "DarkTheme.css")
@@ -77,17 +75,17 @@ A very simple static website generator written in C#/.Net")
                 css.IsFailed.IfTrue(() =>
                 {
                     Console.WriteLine("Failed to parse custom css, using default css instead.");
-                    css = Result.Ok(DefaultCss);
+                    css = Result.Ok(Globals.DefaultCss);
                 });
 
                 // Create index.html
                 Console.WriteLine(
-                    CreateHtmlPage(
+                    HtmlGenerator.CreateHtmlPage(
                         otherPages: otherPages,
                         markdownFile: indexFile,
                         includeFavicon: favicon,
                         includePosts: posts,
-                        postsTitle: postsTitle,
+                        postsTitle: postsTitle.ToList(),
                         siteTitle: siteTitle,
                         css: css.Value,
                         isIndex: true)
@@ -99,12 +97,12 @@ A very simple static website generator written in C#/.Net")
                     foreach (var page in otherPages)
                     {
                         Console.WriteLine(
-                            CreateHtmlPage(
+                            HtmlGenerator.CreateHtmlPage(
                                 otherPages: otherPages,
                                 markdownFile: page,
                                 includeFavicon: favicon,
                                 includePosts: posts,
-                                postsTitle: postsTitle,
+                                postsTitle: postsTitle.ToList(),
                                 siteTitle: siteTitle,
                                 css: css.Value,
                                 isIndex: false)
@@ -139,21 +137,24 @@ A very simple static website generator written in C#/.Net")
                         }
                     }
 
-                    var postCollection = CreateHtmlPostPages(
-                        includeFavicon: favicon,
-                        postsTitle: postsTitle,
-                        siteTitle: siteTitle,
-                        otherPages: otherPages,
-                        rss: rss,
-                        rssImage: rssImageFilename,
-                        css: css.Value
-                    );
-
-
-                    if (success == true && rss == true && rssIcon == true)
+                    foreach (var post in postsTitle)
                     {
-                        // TODO - this will need to account for multiple posts/news/blogs/projects in the future.
-                        RssGenerator.GenerateRssFeed(postsTitle, siteTitle, baseUrl, postCollection);
+                        var postCollection = HtmlGenerator.CreateHtmlPostPages(
+                            includeFavicon: favicon,
+                            postsTitle: post,
+                            siteTitle: siteTitle,
+                            otherPages: otherPages,
+                            rss: rss,
+                            rssImage: rssImageFilename,
+                            css: css.Value
+                        );
+
+
+                        if (success == true && rss == true && rssIcon == true)
+                        {
+                            // TODO - this will need to account for multiple posts/news/blogs/projects in the future.
+                            RssGenerator.GenerateRssFeed(post, siteTitle, baseUrl, postCollection);
+                        }
                     }
                 });
 
@@ -161,219 +162,6 @@ A very simple static website generator written in C#/.Net")
                 //success.IfFalse(() => DeleteOutputDirectorsIfExists());
             })
             .Parse(args);
-    }
-
-    private static string CreateHtmlPage(
-        string markdownFile,
-        bool includeFavicon,
-        bool includePosts,
-        string postsTitle,
-        string siteTitle,
-        IReadOnlyList<string> otherPages,
-        string css,
-        bool isIndex = false)
-    {
-        string htmlIndex = string.Empty;
-
-        try
-        {
-            string contentFilename = Path.Combine(Directory.GetCurrentDirectory(), "input", markdownFile);
-            string contentMarkdown = File.ReadAllText(contentFilename);
-            var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-            string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
-
-
-            htmlIndex = GetPageHtml(
-                otherPages: otherPages,
-                siteTitle: siteTitle,
-                html: contentHtml,
-                includeFavicon: includeFavicon,
-                includePosts: includePosts,
-                postsTitle: postsTitle,
-                isPosts: false,
-                css: css
-            );
-
-        }
-        catch(Exception ex)
-        {
-            return @$"Failed to read markdown file {markdownFile} due to: {ex.Message}";
-        }
-        finally
-        {
-            File.WriteAllText(
-                Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "output",
-                    isIndex == true ?
-                        "index.html" :
-                        Path.GetFileNameWithoutExtension(markdownFile) + ".html"
-                    ),
-                    htmlIndex);
-        }
-
-        return @$"Created Html from Markdown file {markdownFile}";
-    }
-
-    private static IEnumerable<KeyValuePair<DateTime, string>> GetPostOrder(string[] postFiles)
-    {
-        var comparer = new DuplicateKeyComparer<DateTime>();
-        var postOrder = new SortedDictionary<DateTime, string>(comparer);
-
-        foreach (var postfile in postFiles)
-        {
-            string postMarkdown = File.ReadAllText(postfile);
-            var postPipelineBuilder = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-            string postHtml = Markdown.ToHtml(postMarkdown, postPipelineBuilder);
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(postHtml);
-
-            string? postDate = doc.DocumentNode.SelectNodes("//h1")?.First()?.InnerText;
-
-            if (postDate is not null && DateTime.TryParse(postDate, out var postDateTime))
-            {
-                postOrder.Add(postDateTime, postfile);
-            }
-            else
-            {
-                postOrder.Add(DateTime.MinValue, postfile);
-            }
-        }
-
-        return postOrder.Reverse();
-    }
-
-    private static IEnumerable<Post> CreateHtmlPostPages(
-        bool includeFavicon,
-        string postsTitle,
-        string siteTitle,
-        IReadOnlyList<string> otherPages,
-        bool rss,
-        string rssImage,
-        string css)
-    {
-        ImmutableList<Post> postsCollection = ImmutableList<Post>.Empty;
-
-        Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", postsTitle));
-
-        string postsIndexHtml = @$"<h2>{postsTitle}";
-
-        postsIndexHtml += rss == true ?
-            @$"   <a href=""{postsTitle}/{postsTitle}.xml"">
-        <img src=""{rssImage}"" alt=""Rss icon"">
-    </a>
-</h2>" : @$"</h2>";
-
-        var path = Path.Combine(Directory.GetCurrentDirectory(), "input", postsTitle);
-
-        var postFiles = Directory.GetFiles(path);
-        
-        var postOrder = GetPostOrder(postFiles);
-        var postOrderIterator = postOrder.GetEnumerator();
-
-        string previousYear = "All";
-
-        while (postOrderIterator.MoveNext())
-        {
-            string postMarkdown = File.ReadAllText(postOrderIterator.Current.Value);
-            var postPipelineBuilder = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-            string postHtml = Markdown.ToHtml(postMarkdown, postPipelineBuilder);
-            var postHtmlFile = Path.GetFileNameWithoutExtension(postOrderIterator.Current.Value) + ".html";
-
-            Console.WriteLine($"...adding post for {postOrderIterator.Current.Value}...");
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(postHtml);
-
-            string? postDate = doc.DocumentNode.SelectNodes("//h1")?.First()?.InnerText;
-            var postHtmlTitle = doc.DocumentNode.SelectNodes("//h2")?.First()?.InnerText;
-            var postHtmlSummary = doc.DocumentNode.SelectNodes("//p")?.First()?.InnerText;
-            var paragraphElements = doc.DocumentNode.SelectNodes("//p")?.Elements();
-            var postHtmlContents = paragraphElements?.Skip(1).Take(paragraphElements?.Count() ?? 1);
-
-            string contents = string.Empty;
-            
-            if (postHtmlContents is not null)
-            {
-                foreach (var post in postHtmlContents)
-                {
-                    contents += post.InnerText + System.Environment.NewLine;
-                }
-            }
-
-            postsCollection = postsCollection.Add(new Post(Path.GetFileNameWithoutExtension(postOrderIterator.Current.Value), DateTime.Parse(postDate ?? DateTime.Now.ToString()) , postHtmlTitle ?? string.Empty, postHtmlSummary ?? string.Empty, contents));
-
-            string currentYear;
-
-            if (DateTime.TryParse(postDate, out var postDateTime) && !postDateTime.Equals(DateTime.MinValue))
-            {
-                currentYear = postDateTime.ToString("yyyy");
-            }
-            else
-            {
-                currentYear = "All";
-            }
-
-            if (currentYear != previousYear)
-            {
-                postsIndexHtml += @$"<h3>{currentYear}</h3>
-                ";
-               previousYear = currentYear;
-            }
-
-            // TODO - Maybe? support images/cards for post summaries, or perhaps some sort of custom formatting?
-            //      - Or allow some CLI options to show summaries under links, etc?
-            postsIndexHtml += @$"&emsp;<a href=""{postsTitle}/{postHtmlFile}"">{(!postDateTime.Equals(DateTime.MinValue) ? postDateTime.ToString("MM/dd") + " - " : string.Empty)}{postHtmlTitle}</a><br/>
-&emsp;{postHtmlSummary}
-<br/>
-<br/>
-";
-
-// TODO - Implement this
-// <p>{postHtmlSummary}</p>
-
-            var htmlPost = GetPageHtml(
-                otherPages: otherPages,
-                siteTitle: siteTitle,
-                html: postHtml,
-                includeFavicon: includeFavicon,
-                includePosts: true,
-                postsTitle: postsTitle,
-                isPosts: true,
-                css: css
-            );
-
-            File.WriteAllText(
-                Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "output",
-                    $@"{postsTitle}",
-                    postHtmlFile
-                    ),
-                htmlPost);
-        }
-
-        var htmlPosts = GetPageHtml(
-            otherPages: otherPages,
-            siteTitle: siteTitle,
-            html: postsIndexHtml,
-            includeFavicon: includeFavicon,
-            includePosts: true,
-            postsTitle: postsTitle,
-            isPosts: false,
-            css: css
-        );
-
-        File.WriteAllText(
-            Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "output",
-                $@"{postsTitle}.html"
-                ),
-            htmlPosts);
-
-        return postsCollection as IEnumerable<Post>;
     }
 
     private static void DeleteOutputDirectorsIfExists()
@@ -433,123 +221,4 @@ A very simple static website generator written in C#/.Net")
             CopyAll(diSourceSubDir, nextTargetSubDir);
         }
     }
-
-    private static string GetPageHtml(
-        IReadOnlyList<string> otherPages,
-        string css,
-        string siteTitle = "",
-        string html = "",
-        bool includeFavicon = false,
-        bool includePosts = false,
-        string postsTitle = "",
-        bool isPosts = false
-    ) =>
-@$"<!DOCTYPE html>
-<html>
-    <head>
-        <style>
-            {GetFontCss(isPosts: isPosts)}
-            {css}
-        </style>
-        <title>{siteTitle}</title>
-        {(includeFavicon is true ?
-@$"     <link rel=""icon"" type=""image/x-icon"" href=""images/favicon.ico"">" : string.Empty)}
-    </head>
-    <body>
-        {GetNavigationHtml(
-            siteTitle: siteTitle,
-            css: css,
-            includePosts: includePosts,
-            postsTitle: postsTitle,
-            otherPages: otherPages,
-            isPosts: isPosts)}
-        {GetThemeMenuHtml(new List<string>())}
-        <div class=""content"">
-            {html}
-        </div>
-        {GetFooterHtml()}
-    </body>
-</html> ";
-
-    private static string GetNavigationHtml(
-        IReadOnlyList<string> otherPages,
-        string css,
-        string siteTitle,
-        bool includePosts,
-        string postsTitle,
-        bool isPosts)
-    {
-        var otherPagesHtml = string.Empty;
-
-        foreach (var page in otherPages)
-        {
-            otherPagesHtml += @$"         <a href=""{(isPosts ==  true ? ".." : ".")}/{Path.GetFileNameWithoutExtension(page)}.html"">{Path.GetFileNameWithoutExtension(page)}</a>
-";
-        }
-
-        var resultHtml =
-            @$"
-{(
-@$" <div class=""navigation-title"">
-            <a href=""{(isPosts ==  true ? ".." : ".")}/index.html"">{siteTitle}</a>
-    </div>
-    <div class=""navigation"">
-{(includePosts == true ?
-@$"
-            <a href=""{(isPosts ==  true ? ".." : ".")}/{postsTitle}.html"">{postsTitle}</a>
-            {otherPagesHtml}
-            {GetThemeMenuHtml(new List<string>())}
-        </div>
-" : @$"
-        {otherPagesHtml}
-        {GetThemeMenuHtml(new List<string>())}
-        </div>")}
-")}";
-
-        return resultHtml;
-    }
-
-    private static string GetFontCss(bool isPosts)
-    => @$"
-@font-face {{
-    font-family: Inconsolata; src: url(""{(isPosts ==  true ? ".." : ".")}/fonts/Inconsolata-Regular.ttf"");
-}}
-    body {{
-         font-family: Inconsolata
-}}
-";
-
-    private static string GetThemeMenuHtml(IReadOnlyList<string> themeNames)
-    {
-        string resultHtml = string.Empty;
-
-        if (themeNames.Count > 0 && !themeNames[0].Equals("default"))
-        {
-            resultHtml = @$"
-        <div class=""dropdown"">
-            <button class=""dropdownbutton"">Theme</button>
-            <div class=""dropdown-content"">
-";
-
-            foreach (var theme in themeNames)
-            {
-                resultHtml += @$"<a href=""index-{theme}.html"">{theme}</a>
-";
-            }
-
-            resultHtml += @$"            </div>
-        </div>
-        ";
-            }
-
-        return resultHtml;
-    }
-
-    private static string GetFooterHtml()
-    =>
-@$"
-    <footer>
-        <p>Site generated with <a href=""https://github.com/benpocalypse/Markerator"">Markerator v{_version}</a>.</p>
-    </footer>
-";
 }

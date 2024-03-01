@@ -23,8 +23,13 @@ A very simple static website generator written in C#/.Net
 -p|--posts       Optional with default 'False'. Whether or not the site should 
                  include a posts link (like a news or updates section.) 
                  Examples: true, false
--pt|--postsTitle Optional with default 'Posts'. The title that the posts 
-                 section should use. Examples: News, Updates, Blog
+-pt|--postsTitle Optional with default ''. A single title, or comma separated 
+                 list of titles, that represents a link to each section of the 
+                 site that will be a 'feed.' Each postsTitle specified should 
+                 have a corresponding folder that contains one or more Markdown 
+                 files. Examples: News, Updates, Blog, ProjectsMultiple values 
+                 can be used by joining them with any of the following 
+                 separators: , ;
 -rss|--rssFeed   Optional with default 'False'. Whether or not to generate Rss 
                  feeds from your posts/news/blog pages. Examples: true, false
 -ri|--rssIcon    Optional with default 'False'. If set to true, and an icon 
@@ -34,16 +39,14 @@ A very simple static website generator written in C#/.Net
 -f|--favicon     Optional with default 'False'. Whether or not the site should 
                  use a favicon.ico file in the /input/images directory. 
                  Examples: true, false
--op|--otherPages Optional with default 
-                 'System.Collections.Generic.List`1[System.String]'. Additional 
-                 pages that should be linked from the navigation bar, provided 
-                 as a comma separated list of .md files. Examples: 
-                 About.md,Contact.mdMultiple values can be used by joining them 
-                 with any of the following separators: ; ,
+-op|--otherPages Optional with default ''. Additional pages that should be 
+                 linked from the navigation bar, provided as a comma separated 
+                 list of .md files. Examples: About.md,Contact.mdMultiple 
+                 values can be used by joining them with any of the following 
+                 separators: , ;
 -c|--css         Optional with default ''. Inlude a custom CSS file that will 
                  theme the generated site. Examples: LightTheme.css, 
-                 DarkTheme.css
-
+                 DarkTheme.css 
 ```
 
 ## Examples
@@ -100,6 +103,8 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Pro
 - [x] Add RSS feed support 
 	- [x] Rss icon is now shown on the Posts/News/Blog/Projects pages, linking to the Rss feed
 - [x] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand.
+- [x] Refactor the code to move the Html generation out of markerator.cs
+- [x] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
 
 ## Todo
 - [ ] Theme selection
@@ -107,11 +112,12 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Pro
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Better exception/error handling and user feedback
 - [ ] Advanced Css validation
-- [ ] Custom footers
-- [ ] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
-
-
-
+- [ ] Custom footers  
+- [ ] Refactor the code to allow for output directory cleanups, and move the directory code into it's own class
+- [ ] Add `<summary />` tags to generated pages to allow unfurling of URL's on various social media sites
+- [ ] Document the theme Css format to allow users to create new themes
+- [ ] Add more robust error detection and reporting
+ 
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:
 

@@ -13,7 +13,7 @@ public static class CssValidator
         {
             if (cssFilenames.Equals(string.Empty))
             {
-                return Markerator.DefaultCss;
+                return Globals.DefaultCss;
             }
 
             var parser = new StylesheetParser();
