@@ -60,13 +60,24 @@ A very simple static website generator written in C#/.Net")
                 .WithDescription("Inlude a custom CSS file that will theme the generated site.")
                 .WithExamples("LightTheme.css", "DarkTheme.css")
                 .IsOptionalWithDefault("")
-            .Call(customCss => otherPages => favicon => rssIcon => rss => postsTitle => posts => indexFile => baseUrl => siteTitle =>
+            .Call(
+                customCss => 
+                otherPages =>
+                favicon =>
+                rssIcon =>
+                rss =>
+                postsTitle =>
+                posts =>
+                indexFile =>
+                baseUrl =>
+                siteTitle =>
             {
                 var result = $"...site generation successful.";
                 var success = true;
 
                 Console.WriteLine($"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
 
+                // FIXME - Figure out how to do this without blowing out the .git folder
                 //DeleteOutputDirectorsIfExists();
                 CreateOutputDirectories();
 
@@ -88,6 +99,7 @@ A very simple static website generator written in C#/.Net")
                         postsTitle: postsTitle.ToList(),
                         siteTitle: siteTitle,
                         css: css.Value,
+                        baseUrl: baseUrl.ToString(),
                         isIndex: true)
                     );
 
@@ -105,12 +117,13 @@ A very simple static website generator written in C#/.Net")
                                 postsTitle: postsTitle.ToList(),
                                 siteTitle: siteTitle,
                                 css: css.Value,
+                                baseUrl: baseUrl.ToString(),
                                 isIndex: false)
                             );
                     }
                 });
 
-                var rssImageFilename = RssGenerator.GetRssImageFilename();
+                var rssImageFilename = rssIcon == true ? RssGenerator.GetRssImageFilename() : string.Empty;
 
                 // ...and if there are any "news/posts/projects" pages, add those as well.
                 posts.IfTrue(() =>
@@ -144,6 +157,7 @@ A very simple static website generator written in C#/.Net")
                             postsTitle: post,
                             siteTitle: siteTitle,
                             otherPages: otherPages,
+                            baseUrl: baseUrl.ToString(),
                             rss: rss,
                             rssImage: rssImageFilename,
                             css: css.Value

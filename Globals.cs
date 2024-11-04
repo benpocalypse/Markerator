@@ -4,7 +4,7 @@ namespace com.github.benpocalypse.markerator;
 
 public static class Globals
 {
-    public readonly static string Version = "0.4.2";
+    public readonly static string Version = "0.5.0";
 
     public readonly static string DefaultCss = @"
 .navigation-title {

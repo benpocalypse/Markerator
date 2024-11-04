@@ -19,6 +19,7 @@ public static class HtmlGenerator
         string siteTitle,
         IReadOnlyList<string> otherPages,
         string css,
+        string baseUrl,
         bool isIndex = false)
     {
         string htmlIndex = string.Empty;
@@ -35,6 +36,24 @@ public static class HtmlGenerator
             var contentPipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
             string contentHtml = Markdown.ToHtml(contentMarkdown, contentPipeline);
 
+            var doc = new HtmlDocument();
+            doc.LoadHtml(contentHtml);
+            var postHtmlSummary = doc.DocumentNode.SelectNodes("//p")?.First()?.InnerText;
+
+
+            string metaCards = @$"
+<meta property=""og:type"" content=""website""/>
+<meta property=""og:url"" content=""{baseUrl}"" />
+<meta property=""og:title"" content=""{siteTitle}"" />
+<meta property=""og:description"" content=""{postHtmlSummary}"" />
+<meta property=""og:image"" content=""{baseUrl}/cardimage.png"" />
+<meta name=""twitter:card"" content=""summary_large_image"">
+<meta name=""twitter:domain"" value=""{baseUrl}"" />
+<meta name=""twitter:title"" value=""{siteTitle}"" />
+<meta name=""twitter:description"" value=""{postHtmlSummary}"" />
+<meta name=""twitter:image"" content=""{baseUrl}/cardimage.png"" />
+<meta name=""twitter:url"" value=""{baseUrl}"" />
+";
 
             htmlIndex = GetPageHtml(
                 otherPages: otherPages,
@@ -42,6 +61,7 @@ public static class HtmlGenerator
                 css: css,
                 siteTitle: siteTitle,
                 html: contentHtml,
+                metaCards: metaCards,
                 includeFavicon: includeFavicon,
                 includePosts: includePosts,
                 isPosts: false
@@ -73,6 +93,7 @@ public static class HtmlGenerator
         string postsTitle,
         string siteTitle,
         IReadOnlyList<string> otherPages,
+        string baseUrl,
         bool rss,
         string rssImage,
         string css)
@@ -126,7 +147,8 @@ public static class HtmlGenerator
                 }
             }
 
-            postsCollection = postsCollection.Add(new Post(Path.GetFileNameWithoutExtension(postOrderIterator.Current.Value), DateTime.Parse(postDate ?? DateTime.Now.ToString()) , postHtmlTitle ?? string.Empty, postHtmlSummary ?? string.Empty, contents));
+            var newPost = new Post(Path.GetFileNameWithoutExtension(postOrderIterator.Current.Value), DateTime.Parse(postDate ?? DateTime.Now.ToString()) , postHtmlTitle ?? string.Empty, postHtmlSummary ?? string.Empty, contents);
+            postsCollection = postsCollection.Add(newPost);
 
             string currentYear;
 
@@ -154,8 +176,21 @@ public static class HtmlGenerator
 <br/>
 ";
 
-// TODO - Implement this
-// <p>{postHtmlSummary}</p>
+            string metaCards = @$"
+<meta property=""og:type"" content=""website""/>
+<meta property=""og:url"" content=""{baseUrl}"" />
+<meta property=""og:title"" content=""{siteTitle}"" />
+<meta property=""og:description"" content=""{postHtmlSummary}"" />
+<meta property=""og:image"" content=""{baseUrl}/cardimage.png"" />
+<meta name=""twitter:card"" content=""summary_large_image"">
+<meta name=""twitter:domain"" value=""{baseUrl}"" />
+<meta name=""twitter:title"" value=""{siteTitle}"" />
+<meta name=""twitter:description"" value=""{postHtmlSummary}"" />
+<meta name=""twitter:image"" content=""{baseUrl}/cardimage.png"" />
+<meta name=""twitter:url"" value=""{baseUrl}"" />
+<meta name=""twitter:label1"" value=""Posted:"" />
+<meta name=""twitter:data1"" value=""{(!postDateTime.Equals(DateTime.MinValue) ? postDateTime.ToString("MM/dd") : string.Empty)}"" />
+";
 
 
             var htmlPost = GetPageHtml(
@@ -165,6 +200,7 @@ public static class HtmlGenerator
                 siteTitle: siteTitle,
                 html: postHtml,
                 includeFavicon: includeFavicon,
+                metaCards: metaCards,
                 includePosts: true,
                 isPosts: true
             );
@@ -185,6 +221,7 @@ public static class HtmlGenerator
             css: css,
             siteTitle: siteTitle,
             html: postsIndexHtml,
+            metaCards: baseUrl,
             includeFavicon: includeFavicon,
             includePosts: true,
             isPosts: false
@@ -201,19 +238,23 @@ public static class HtmlGenerator
         return postsCollection as IEnumerable<Post>;
     }
 
-    public static string GetPageHtml(
+    private static string GetPageHtml(
         IReadOnlyList<string> otherPages,
         List<string> postsTitle,
         string css,
         string siteTitle = "",
         string html = "",
+        string metaCards = "",
         bool includeFavicon = false,
         bool includePosts = false,
         bool isPosts = false
-    ) =>
+    )
+    {
+        return 
 @$"<!DOCTYPE html>
 <html>
     <head>
+        {metaCards}
         <style>
             {GetFontCss(isPosts: isPosts)}
             {css}
@@ -237,6 +278,7 @@ public static class HtmlGenerator
         {GetFooterHtml()}
     </body>
 </html> ";
+    }
 
     private static string GetNavigationHtml(
         IReadOnlyList<string> otherPages,
@@ -314,7 +356,7 @@ public static class HtmlGenerator
             resultHtml += @$"            </div>
         </div>
         ";
-            }
+        }
 
         return resultHtml;
     }
@@ -355,5 +397,4 @@ public static class HtmlGenerator
 
         return postOrder.Reverse();
     }
-
 }
