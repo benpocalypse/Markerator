@@ -40,6 +40,14 @@ public static class HtmlGenerator
             doc.LoadHtml(contentHtml);
             var postHtmlSummary = doc.DocumentNode.SelectNodes("//p")?.First()?.InnerText;
 
+            /*
+             * <meta property="og:image" content="http://example.com/ogp.jpg" />
+               <meta property="og:image:secure_url" content="https://secure.example.com/ogp.jpg" />
+               <meta property="og:image:type" content="image/jpeg" />
+               <meta property="og:image:width" content="400" />
+               <meta property="og:image:height" content="300" />
+               <meta property="og:image:alt" content="A shiny red apple with a bite taken out" />
+             */
 
             string metaCards = @$"
 <meta property=""og:type"" content=""website""/>
@@ -47,12 +55,7 @@ public static class HtmlGenerator
 <meta property=""og:title"" content=""{siteTitle}"" />
 <meta property=""og:description"" content=""{postHtmlSummary}"" />
 <meta property=""og:image"" content=""{baseUrl}images/cardimage.png"" />
-<meta name=""twitter:card"" content=""summary_large_image"">
-<meta name=""twitter:domain"" value=""{baseUrl}"" />
-<meta name=""twitter:title"" value=""{siteTitle}"" />
-<meta name=""twitter:description"" value=""{postHtmlSummary}"" />
-<meta name=""twitter:image"" content=""{baseUrl}images/cardimage.png"" />
-<meta name=""twitter:url"" value=""{baseUrl}"" />
+<meta property=""og:image:type"" content=""image/png"" />
 ";
 
             htmlIndex = GetPageHtml(
@@ -182,14 +185,7 @@ public static class HtmlGenerator
 <meta property=""og:title"" content=""{siteTitle}"" />
 <meta property=""og:description"" content=""{postHtmlSummary}"" />
 <meta property=""og:image"" content=""{baseUrl}images/cardimage.png"" />
-<meta name=""twitter:card"" content=""summary_large_image"">
-<meta name=""twitter:domain"" value=""{baseUrl}"" />
-<meta name=""twitter:title"" value=""{siteTitle}"" />
-<meta name=""twitter:description"" value=""{postHtmlSummary}"" />
-<meta name=""twitter:image"" content=""{baseUrl}images/cardimage.png"" />
-<meta name=""twitter:url"" value=""{baseUrl}"" />
-<meta name=""twitter:label1"" value=""Posted:"" />
-<meta name=""twitter:data1"" value=""{(!postDateTime.Equals(DateTime.MinValue) ? postDateTime.ToString("MM/dd") : string.Empty)}"" />
+<meta property=""og:image:type"" content=""image/png"" />
 ";
 
 
