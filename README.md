@@ -105,8 +105,10 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Pro
 - [x] Refactor the code to map different page types to different concrete classes. Simply manipulating strings has gotten out of hand.
 - [x] Refactor the code to move the Html generation out of markerator.cs
 - [x] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
+- [x] Add Open Graph support to generated pages to allow unfurling of URL's on various social media sites
 
 ## Todo
+- [ ] Add user-definable pagination to Posts/News/Updates pages
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
@@ -114,7 +116,7 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Pro
 - [ ] Advanced Css validation
 - [ ] Custom footers  
 - [ ] Refactor the code to allow for output directory cleanups, and move the directory code into it's own class
-- [ ] Add `<summary />` tags to generated pages to allow unfurling of URL's on various social media sites
+
 - [ ] Document the theme Css format to allow users to create new themes
 - [ ] Add more robust error detection and reporting
  
