@@ -46,12 +46,12 @@ public static class HtmlGenerator
 <meta property=""og:url"" content=""{baseUrl}"" />
 <meta property=""og:title"" content=""{siteTitle}"" />
 <meta property=""og:description"" content=""{postHtmlSummary}"" />
-<meta property=""og:image"" content=""{baseUrl}/cardimage.png"" />
+<meta property=""og:image"" content=""{baseUrl}images/cardimage.png"" />
 <meta name=""twitter:card"" content=""summary_large_image"">
 <meta name=""twitter:domain"" value=""{baseUrl}"" />
 <meta name=""twitter:title"" value=""{siteTitle}"" />
 <meta name=""twitter:description"" value=""{postHtmlSummary}"" />
-<meta name=""twitter:image"" content=""{baseUrl}/cardimage.png"" />
+<meta name=""twitter:image"" content=""{baseUrl}images/cardimage.png"" />
 <meta name=""twitter:url"" value=""{baseUrl}"" />
 ";
 
@@ -181,12 +181,12 @@ public static class HtmlGenerator
 <meta property=""og:url"" content=""{baseUrl}"" />
 <meta property=""og:title"" content=""{siteTitle}"" />
 <meta property=""og:description"" content=""{postHtmlSummary}"" />
-<meta property=""og:image"" content=""{baseUrl}/cardimage.png"" />
+<meta property=""og:image"" content=""{baseUrl}images/cardimage.png"" />
 <meta name=""twitter:card"" content=""summary_large_image"">
 <meta name=""twitter:domain"" value=""{baseUrl}"" />
 <meta name=""twitter:title"" value=""{siteTitle}"" />
 <meta name=""twitter:description"" value=""{postHtmlSummary}"" />
-<meta name=""twitter:image"" content=""{baseUrl}/cardimage.png"" />
+<meta name=""twitter:image"" content=""{baseUrl}images/cardimage.png"" />
 <meta name=""twitter:url"" value=""{baseUrl}"" />
 <meta name=""twitter:label1"" value=""Posted:"" />
 <meta name=""twitter:data1"" value=""{(!postDateTime.Equals(DateTime.MinValue) ? postDateTime.ToString("MM/dd") : string.Empty)}"" />
