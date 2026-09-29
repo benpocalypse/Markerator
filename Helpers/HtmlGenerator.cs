@@ -40,15 +40,6 @@ public static class HtmlGenerator
             doc.LoadHtml(contentHtml);
             var postHtmlSummary = doc.DocumentNode.SelectNodes("//p")?.First()?.InnerText;
 
-            /*
-             * <meta property="og:image" content="http://example.com/ogp.jpg" />
-               <meta property="og:image:secure_url" content="https://secure.example.com/ogp.jpg" />
-               <meta property="og:image:type" content="image/jpeg" />
-               <meta property="og:image:width" content="400" />
-               <meta property="og:image:height" content="300" />
-               <meta property="og:image:alt" content="A shiny red apple with a bite taken out" />
-             */
-
             string metaCards = @$"
 <meta property=""og:type"" content=""website""/>
 <meta property=""og:url"" content=""{baseUrl}"" />
@@ -122,6 +113,8 @@ public static class HtmlGenerator
 
         string previousYear = "All";
 
+        postOrder.Count()
+        
         while (postOrderIterator.MoveNext())
         {
             string postMarkdown = File.ReadAllText(postOrderIterator.Current.Value);

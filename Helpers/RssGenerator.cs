@@ -19,7 +19,7 @@ public static class RssGenerator
             var item = new SyndicationItem(
                 title: post.Title, 
                 content: post.Contents,
-                itemAlternateLink: new Uri ($@"{baseUri.OriginalString}/{feedTitle}/{post.PostFilename}.html"), // FIXME - This isn't right.
+                itemAlternateLink: new Uri ($@"{baseUri.OriginalString}/{feedTitle}/{post.PostFilename}.html"), // FIXME - This isn't right?
                 id: Guid.NewGuid().ToString(),
                 lastUpdatedTime: post?.PostDate ?? DateTime.Now);
 
@@ -28,7 +28,7 @@ public static class RssGenerator
         }
         
         feed.Items = items;
-        feed.Language = "en-us";
+        feed.Language = "en-us"; //TODO - Consider allowing configurable languages
         feed.LastUpdatedTime = DateTime.Now;
 
         XmlWriter rssWriter = XmlWriter.Create(Path.Combine(Directory.GetCurrentDirectory(), $@"output/{feedTitle}/", $@"{feedTitle}.xml"));
