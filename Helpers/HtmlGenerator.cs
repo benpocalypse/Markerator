@@ -90,7 +90,8 @@ public static class HtmlGenerator
         string baseUrl,
         bool rss,
         string rssImage,
-        string css)
+        string css,
+        int pagination = 0)
     {
         ImmutableList<Post> postsCollection = ImmutableList<Post>.Empty;
 
@@ -113,7 +114,10 @@ public static class HtmlGenerator
 
         string previousYear = "All";
 
-        postOrder.Count()
+        if (postOrder.Count() > 0)
+        {
+            int pageCount = 1;
+        }
         
         while (postOrderIterator.MoveNext())
         {
