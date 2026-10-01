@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace com.github.benpocalypse;
+namespace Markerator;
 
 public static class MarkeratorExtensions
 {
@@ -20,6 +17,14 @@ public static class MarkeratorExtensions
     public static void IfNotEmpty<T>(this IReadOnlyList<T> list, Action then)
     {
         if (list.Count > 0)
+        {
+            then();
+        }
+    }
+
+    public static void IsNullOrEmpty<T>(this IReadOnlyList<T>? list, Action then)
+    {
+        if (list != null || list?.Count != 0)
         {
             then();
         }

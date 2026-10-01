@@ -1,5 +1,5 @@
 # Markerator
-A very simple static website generator written in C#/.Net. I created this mainly because I was disappointed at the sheer complexity of any of the existing static site generators I was able to find. No offense to anyone creating web content, but to me, things have gotten far too complex to create even a minimal website. I plan to dogfood markerator for my own website once it reaches a minimum level of maturity. And yes, I realize the logo is very immature.
+A very simple static website generator written in C#/.Net. I created this mainly because I was disappointed at the sheer complexity of any of the existing static site generators I was able to find. No offense to anyone creating web content, but to me, things have gotten far too complex to create even a minimal website. I plan to dogfood Markerator for my own website once it reaches a minimum level of maturity. And yes, I realize the logo is very immature. I'll get a better one some day.
 
 ![Markerator Logo](docs/images/markerator_logo_small.png)
 
@@ -47,10 +47,11 @@ A very simple static website generator written in C#/.Net
 -c|--css         Optional with default ''. Inlude a custom CSS file that will 
                  theme the generated site. Examples: LightTheme.css, 
                  DarkTheme.css 
+-pp|--postsPerPage Optional with default 0. This will tell Markerator how many posts should appear on the News/Updates/Blogs landing page. Specifying 0 will mean there is no limit, specifying any other number will create a series of pages that are linked to each other for pagination.
 ```
 
 ## Examples
-In order for markerator to correctly process your markdown input files, it expects a pre-determined folder layout, with a number of folders/files inside it. It will then process the input files and if successful put the resulting Html site into the `/output` folder.
+In order for Markerator to correctly process your markdown input files, it expects a pre-determined folder layout, with a number of folders/files inside it. It will then process the input files and if successful put the resulting Html site into the `/output` folder.
 
 ### Minimal Site
 Below represents the minimum that markerator expects in order to create a valid Html website.
@@ -109,6 +110,9 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Pro
 
 ## Todo
 - [ ] Add user-definable pagination to Posts/News/Updates pages
+- [ ] Update documentation to be more robust and explicit
+- [ ] Create a guide to walk through how to set up Github automation and host a Markerator site on Github
+- [ ] Per page/post Open Graph images, rather than just a single site-wide Open Graph image
 - [ ] Theme selection
 - [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
@@ -125,6 +129,7 @@ Markerator uses a number of very handy nuget packages to do what it does, and fo
 
 * [FluentResult](https://github.com/altmann/FluentResults) - Exception handling shouldn't be control flow.
 * [FluentArgs](https://github.com/kutoga/FluentArgs) - The best CLI argument handling library around.
+* [FluentAssertions](https://github.com/fluentassertions/fluentassertions) - A great library that makes Unit Tests much more readable and easy to write.
 * [Markdig](https://github.com/xoofx/markdig) - Converting markdown to Html couldn't be easier.
 * [HtmlAgilityPack](https://github.com/zzzprojects/html-agility-pack) - Peeking at Html made dead simple.
 * [ExCss](https://github.com/TylerBrinks/ExCSS) - Peeking at Css made dead simple.

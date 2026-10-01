@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace com.github.benpocalypse.markerator.helpers;
+﻿namespace Markerator.Helpers;
 
 public sealed class DuplicateKeyComparer<TKey> : IComparer<TKey> where TKey : IComparable
 {
@@ -9,13 +6,7 @@ public sealed class DuplicateKeyComparer<TKey> : IComparer<TKey> where TKey : IC
     {
         int result = x!.CompareTo(y);
 
-        if (result == 0)
-        {
-            return 1;   // Handle equality as being greater than
-        }
-        else
-        {
-            return result;
-        }
+        return result == 0 ? 1 : // Handle equality as being greater than
+            result;
     }
 }

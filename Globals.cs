@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace com.github.benpocalypse.markerator;
+﻿namespace Markerator;
 
 public static class Globals
 {
-    public readonly static string Version = "0.6.1";
+    public static readonly string Version = "0.7.0";
 
-    public readonly static string DefaultCss = @"
+    public static readonly string DefaultCss = @"
 .navigation-title {
     overflow: hidden;
     position: fixed;
@@ -120,6 +118,44 @@ th, td {
 
 .content a:hover {
     color: black;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2rem 0;
+    font-size: 0.95rem;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination-current,
+.pagination-prev,
+.pagination-next {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination-current {
+    background: #333;
+    color: #fff;
+    border-color: #333;
+    font-weight: bold;
+}
+
+.pagination .disabled {
+    color: #aaa;
+    border-color: #eee;
+    cursor: not-allowed;
 }
 
 head {

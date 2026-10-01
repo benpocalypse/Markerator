@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ServiceModel.Syndication;
 using System.Xml;
-using System.ServiceModel.Syndication;
-using System.IO;
+using Markerator.Abstractions;
 
-namespace com.github.benpocalypse.markerator;
+namespace Markerator.Helpers;
 
 public static class RssGenerator
 {

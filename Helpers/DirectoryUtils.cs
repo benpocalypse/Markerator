@@ -1,7 +1,4 @@
-using System;
-using System.IO;
-
-namespace markerator.Helpers;
+namespace Markerator.Helpers;
 
 public static class DirectoryUtils
 {
@@ -37,7 +34,7 @@ public static class DirectoryUtils
         }
     }
 
-    public static void CopyDirectory(string sourceDirectory, string targetDirectory)
+    private static void CopyDirectory(string sourceDirectory, string targetDirectory)
     {
         var diSource = new DirectoryInfo(sourceDirectory);
         var diTarget = new DirectoryInfo(targetDirectory);
@@ -45,7 +42,7 @@ public static class DirectoryUtils
         CopyAll(diSource, diTarget);
     }
 
-    public static void CopyAll(DirectoryInfo source, DirectoryInfo target)
+    private static void CopyAll(DirectoryInfo source, DirectoryInfo target)
     {
         Directory.CreateDirectory(target.FullName);
 

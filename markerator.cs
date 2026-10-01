@@ -1,191 +1,139 @@
-﻿using System;
-using System.IO;
-using Markdig;
-using FluentArgs;
-using FluentResults;
-using HtmlAgilityPack;
-using System.Linq;
-using System.Collections.Generic;
-using com.github.benpocalypse.markerator.helpers;
-using System.Collections.Immutable;
-using markerator.Helpers;
+﻿using FluentArgs;
+using Markerator.Helpers;
 
-namespace com.github.benpocalypse.markerator;
+namespace Markerator;
 
-public partial class Markerator
+public static class Markerator
 {
-    static void Main(string[] args)
+    public static int Main(string[] args)
     {
-        FluentArgsBuilder.New()
-            .DefaultConfigsWithAppDescription(@$"Markerator v{Globals.Version}.
-A very simple static website generator written in C#/.Net")
-            .RegisterHelpFlag("-h", "--help")
-            .Parameter<string>("-t", "--title")
-            .WithDescription("The title of the website.")
-            .WithExamples("Markerator Generated Site", "zombo.com")
-            .IsRequired()
-            .Parameter<Uri>("-u", "--url")
-            .WithDescription("The base Url of the website, omitting the trailing slash.")
-            .WithExamples("https://www.slashdot.org", "https://elementary.io")
-            .IsRequired()
-            .Parameter<string>("-i", "--indexFile")
-            .WithDescription("The markdown file that is to be converted into the index.html file.")
-            .WithExamples("mainFile.md", "radicalText.md")
-            .WithValidation(name => !name.Contains(" "), name => "Markdown filename cannot contain spaces.")
-            .IsRequired()
-            .Parameter<bool>("-p", "--posts")
-            .WithDescription("Whether or not the site should include a posts link (like a news or updates section.)")
-            .WithExamples("true", "false")
-            .IsOptionalWithDefault(false)
-            .ListParameter<string>("-pt", "--postsTitle")
-            .WithDescription(
-                "A single title, or comma separated list of titles, that represents a link to each section of the site that will be a 'feed.' Each postsTitle specified should have a corresponding folder that contains one or more Markdown files.")
-            .WithExamples("News", "Updates", "Blog, Projects")
-            .IsOptionalWithDefault(default(List<string>)!)
-            .Parameter<bool>("-rss", "--rssFeed")
-            .WithDescription("Whether or not to generate Rss feeds from your posts/news/blog pages.")
-            .WithExamples("true", "false")
-            .IsOptionalWithDefault(false)
-            .Parameter<bool>("-ri", "--rssIcon")
-            .WithDescription(
-                "If set to true, and an icon named 'rss.jpg' or 'rss.png' exists in the /images folder, then an icon link will be created that links to each pages Rss feed.")
-            .WithExamples("true", "false")
-            .IsOptionalWithDefault(false)
-            .Parameter<bool>("-f", "--favicon")
-            .WithDescription("Whether or not the site should use a favicon.ico file in the /input/images directory.")
-            .WithExamples("true", "false")
-            .IsOptionalWithDefault(false)
-            .ListParameter<string>("-op", "--otherPages")
-            .WithDescription(
-                "Additional pages that should be linked from the navigation bar, provided as a comma separated list of .md files.")
-            .WithExamples("About.md,Contact.md")
-            .IsOptionalWithDefault(default(List<string>)!)
-            .Parameter<string>("-c", "--css")
-            .WithDescription("Inlude a custom CSS file that will theme the generated site.")
-            .WithExamples("LightTheme.css", "DarkTheme.css")
-            .IsOptionalWithDefault("")
-            .Call(customCss =>
-                otherPages =>
-                favicon =>
-                rssIcon =>
-                rss =>
-                postsTitle =>
-                posts =>
-                indexFile =>
-                baseUrl =>
-                siteTitle =>
+        try
+        {
+            FluentArgsBuilder.New()
+                .Parameter<string>("-t", "--title")
+                    .WithDescription("The title of the website.")
+                    .IsRequired()
+                .Parameter<string>("-u", "--url")
+                    .WithDescription("The base URL of the website, omitting the trailing slash.")
+                    .IsRequired()
+                .Parameter<string>("-i", "--indexFile")
+                    .WithDescription("The markdown file to convert into index.html.")
+                    .IsRequired()
+                .Parameter<bool>("-p", "--posts")
+                    .WithDescription("Optional with default 'False'. Whether to include Posts/News sections.")
+                    .IsOptionalWithDefault(false)
+                .ListParameter<string>("-pt", "--postsTitle")
+                    .WithDescription("Optional. Section titles (e.g. News,Updates,Blog).")
+                    .IsOptionalWithDefault(new List<string>())
+                .Parameter<bool>("-rss", "--rssFeed")
+                    .WithDescription("Optional with default 'False'. Whether to generate RSS feeds.")
+                    .IsOptionalWithDefault(false)
+                .Parameter<bool>("-ri", "--rssIcon")
+                    .WithDescription("Optional with default 'False'. Whether to show an RSS icon linking to the feed.")
+                    .IsOptionalWithDefault(false)
+                .Parameter<bool>("-f", "--favicon")
+                    .WithDescription("Optional with default 'False'. Whether to include a favicon from input/images.")
+                    .IsOptionalWithDefault(false)
+                .ListParameter<string>("-op", "--otherPages")
+                    .WithDescription("Optional. Extra .md pages for the nav bar.")
+                    .IsOptionalWithDefault(new List<string>())
+                .Parameter<string>("-c", "--css")
+                    .WithDescription("Optional. Custom CSS file to theme the site.")
+                    .IsOptionalWithDefault(string.Empty)
+                .Parameter<int>("-pp", "--postsPerPage")
+                    .WithDescription("Optional with default '0'. Posts per page. 0 = no pagination.")
+                    .IsOptionalWithDefault(0)
+                .Call(
+                    postsPerPage => css => otherPages => favicon => rssIcon => rssFeed =>
+                    postsTitle => posts => indexFile => url => title =>
                 {
-                    var result = $"...site generation successful.";
-                    var success = true;
+                    Environment.ExitCode = Run(
+                        title, url, indexFile, posts, postsTitle.ToList(),
+                        rssFeed, rssIcon, favicon, otherPages.ToList(), css, postsPerPage);
+                })
+                .Parse(args);
 
-                    Console.WriteLine(
-                        $"Creating site {siteTitle} with index of {indexFile}, including posts: {posts}...");
+            return Environment.ExitCode;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Fatal: {ex.Message}");
+            return 1;
+        }
+    }
 
-                    // FIXME - Figure out how to do this without blowing out the .git folder
-                    //DeleteOutputDirectorsIfExists();
-                    DirectoryUtils.CreateOutputDirectories();
+    private static int Run(
+        string title,
+        string url,
+        string indexFile,
+        bool posts,
+        List<string> postsTitle,
+        bool rssFeed,
+        bool rssIcon,
+        bool favicon,
+        List<string> otherPages,
+        string css,
+        int postsPerPage)
+    {
+        var normalizedTitles = NormalizeList(postsTitle);
+        var normalizedPages = NormalizeList(otherPages);
 
-                    var css = CssValidator.ValidateAndGetCustomCssContents(customCss);
+        var inputDir = Path.Combine(Directory.GetCurrentDirectory(), "input");
+        var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "output");
 
-                    css.IsFailed.IfTrue(() =>
-                    {
-                        Console.WriteLine(
-                            "Failed to parse custom css, using default css instead.");
-                        css = Result.Ok(Globals.DefaultCss);
-                    });
+        if (!Directory.Exists(inputDir))
+        {
+            Console.Error.WriteLine($"Error: input directory not found at {inputDir}");
+            return 1;
+        }
 
-                    // Create index.html
-                    Console.WriteLine(
-                        HtmlGenerator.CreateHtmlPage(
-                            otherPages: otherPages,
-                            markdownFile: indexFile,
-                            includeFavicon: favicon,
-                            includePosts: posts,
-                            postsTitle: postsTitle.ToList(),
-                            siteTitle: siteTitle,
-                            css: css.Value,
-                            baseUrl: baseUrl.ToString(),
-                            isIndex: true)
-                    );
+        url = url.TrimEnd('/');
 
-                    // Now add all the other pages, if there are any.
-                    otherPages.IfNotEmpty(() =>
-                    {
-                        foreach (var page in otherPages)
-                        {
-                            Console.WriteLine(
-                                HtmlGenerator.CreateHtmlPage(
-                                    otherPages: otherPages,
-                                    markdownFile: page,
-                                    includeFavicon: favicon,
-                                    includePosts: posts,
-                                    postsTitle: postsTitle.ToList(),
-                                    siteTitle: siteTitle,
-                                    css: css.Value,
-                                    baseUrl: baseUrl.ToString(),
-                                    isIndex: false)
-                            );
-                        }
-                    });
+        if (posts && normalizedTitles.Count == 0)
+        {
+            normalizedTitles.Add("News");
+        }
 
-                    var rssImageFilename = rssIcon == true
-                        ? RssGenerator.GetRssImageFilename()
-                        : string.Empty;
+        Directory.CreateDirectory(outputDir);
 
-                    // ...and if there are any "news/posts/projects" pages, add those as well.
-                    posts.IfTrue(() =>
-                    {
-                        if (rss == true && rssIcon == false)
-                        {
-                            success = false;
-                            result =
-                                $"...site generation failed. If Rss generation is true, an rssIcon must be specified.";
-                        }
-                        else
-                        {
-                            if (rss == false && rssIcon == true)
-                            {
-                                success = false;
-                                result =
-                                    $"...site generation failed. An rssIcon should not be included if Rss generation isn't true.";
-                            }
-                            else
-                            {
-                                RssGenerator.VerifyRssImageExistsInOutput()
-                                    .IfFalse(() =>
-                                    {
-                                        success = false;
-                                        result =
-                                            $"...site generation failed. An rssIcon was not found. Please ensure you have a file named either 'rss.png' or 'rss.jpg' in your input/images folder.";
-                                    });
-                            }
-                        }
+        var generator = new HtmlGenerator(
+            title: title,
+            baseUrl: url,
+            inputDir: inputDir,
+            outputDir: outputDir,
+            css: css,
+            favicon: favicon,
+            rssFeed: rssFeed,
+            rssIcon: rssIcon,
+            postsPerPage: postsPerPage,
+            postsTitles: normalizedTitles,
+            otherPages: normalizedPages);
 
-                        foreach (var post in postsTitle)
-                        {
-                            var postCollection = HtmlGenerator.CreateHtmlPostPages(
-                                includeFavicon: favicon,
-                                postsTitle: post,
-                                siteTitle: siteTitle,
-                                otherPages: otherPages,
-                                baseUrl: baseUrl.ToString(),
-                                rss: rss,
-                                rssImage: rssImageFilename,
-                                css: css.Value
-                            );
+        var result = generator.Generate(indexFile);
 
+        if (result.IsFailed)
+        {
+            foreach (var err in result.Errors)
+            {
+                Console.Error.WriteLine($"Error: {err.Message}");
+            }
+            return 1;
+        }
 
-                            if (success == true && rss == true && rssIcon == true)
-                            {
-                                // TODO - this will need to account for multiple posts/news/blogs/projects in the future.
-                                RssGenerator.GenerateRssFeed(post, siteTitle, baseUrl,
-                                    postCollection);
-                            }
-                        }
-                    });
+        Console.WriteLine("Site generated successfully.");
+        return 0;
+    }
 
-                    Console.WriteLine(result);
-                    //success.IfFalse(() => DeleteOutputDirectorsIfExists());
-                }).Parse(args);
+    private static List<string> NormalizeList(IEnumerable<string>? items)
+    {
+        if (items == null) return new List<string>();
+
+        return items
+            .SelectMany(s => (s ?? string.Empty).Split(
+                new[] { ',', ';' },
+                StringSplitOptions.RemoveEmptyEntries))
+            .Select(s => s.Trim())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToList();
     }
 }

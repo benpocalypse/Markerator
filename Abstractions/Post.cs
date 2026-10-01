@@ -1,5 +1,3 @@
-using System;
-
-namespace com.github.benpocalypse.markerator;
+namespace Markerator.Abstractions;
 
 public record Post(string PostFilename, DateTime? PostDate, string Title, string? Summary, string Contents);

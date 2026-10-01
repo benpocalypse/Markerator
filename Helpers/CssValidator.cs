@@ -1,9 +1,7 @@
-﻿using System;
+﻿using ExCSS;
 using FluentResults;
-using ExCSS;
-using System.IO;
 
-namespace com.github.benpocalypse.markerator;
+namespace Markerator.Helpers;
 
 public static class CssValidator
 {
@@ -29,10 +27,10 @@ public static class CssValidator
                     !rule.SelectorText.Contains("head") &&
                     !rule.SelectorText.Contains("body") &&
                     !rule.SelectorText.Contains("h"))
-                    {
-                        Console.WriteLine("Returning default Css.");
-                        throw new Exception($"Failed to parse {cssFilenames}.");
-                    }
+                {
+                    Console.WriteLine("Returning default Css.");
+                    throw new Exception($"Failed to parse {cssFilenames}.");
+                }
             }
 
             Console.WriteLine("Returning custom Css.");
