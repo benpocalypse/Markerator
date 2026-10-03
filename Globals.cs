@@ -2,7 +2,7 @@
 
 public static class Globals
 {
-    public static readonly string Version = "0.7.0";
+    public static readonly string Version = "0.7.1";
 
     public static readonly string DefaultCss = @"
 .navigation-title {
