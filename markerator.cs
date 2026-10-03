@@ -10,6 +10,8 @@ public static class Markerator
         try
         {
             FluentArgsBuilder.New()
+                .DefaultConfigsWithAppDescription("A very simple static website generator written in C#.")
+                .RegisterHelpFlag("-h", "--help")
                 .Parameter<string>("-t", "--title")
                     .WithDescription("The title of the website.")
                     .IsRequired()

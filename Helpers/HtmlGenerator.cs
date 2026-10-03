@@ -101,7 +101,7 @@ public class HtmlGenerator
         var cssOutDir = Path.Combine(_outputDir, "css");
         Directory.CreateDirectory(cssOutDir);
 
-        // Explicitly requested CSS: find it and copy verbatim.
+        // 1. Explicitly requested CSS: find it and copy verbatim.
         if (!string.IsNullOrEmpty(_css))
         {
             var candidates = new[]
@@ -112,28 +112,37 @@ public class HtmlGenerator
             };
 
             var source = candidates.FirstOrDefault(File.Exists);
-            if (source == null)
+            if (source != null)
             {
-                throw new FileNotFoundException(
-                    $"CSS file '{_css}' was specified but could not be located in input/ or input/css/.");
+                var destName = Path.GetFileName(source);
+                var dest = Path.Combine(cssOutDir, destName);
+                File.Copy(source, dest, overwrite: true);
+                Console.WriteLine($"Copied {source} -> {dest}");
+                return;
             }
 
-            var destName = Path.GetFileName(source);
-            File.Copy(source, Path.Combine(cssOutDir, destName), overwrite: true);
-            Console.WriteLine($"Copied {source} -> {Path.Combine(cssOutDir, destName)}");
+            // Explicitly requested but not found: warn and fall through to the default
+            // rather than failing the whole generation. The user gets a styled site,
+            // and the warning tells them their custom CSS wasn't applied.
+            Console.WriteLine(
+                $"Warning: CSS file '{_css}' was specified but could not be located in " +
+                $"input/ or input/css/. Falling back to the default stylesheet.");
+        }
+
+        // 2. No CSS specified (or the requested one wasn't found): try input/css/site.css.
+        var siteCssSource = Path.Combine(_inputDir, "css", "site.css");
+        if (File.Exists(siteCssSource))
+        {
+            var dest = Path.Combine(cssOutDir, "site.css");
+            File.Copy(siteCssSource, dest, overwrite: true);
+            Console.WriteLine($"Copied {siteCssSource} -> {dest}");
             return;
         }
 
-        // No CSS specified: copy a default site.css if one exists.
-        var defaultSource = Path.Combine(_inputDir, "css", "site.css");
-        if (File.Exists(defaultSource))
-        {
-            File.Copy(defaultSource, Path.Combine(cssOutDir, "site.css"), overwrite: true);
-            Console.WriteLine($"Copied {defaultSource} -> {Path.Combine(cssOutDir, "site.css")}");
-        }
-        // Nothing to copy: pages will still reference /css/site.css, but it will 404.
-        // That's the same failure mode as before, but now it only happens when the
-        // user genuinely has no CSS at all.
+        // 3. Nothing user-provided exists: write Globals.DefaultCss so the <link> always resolves.
+        var defaultDest = Path.Combine(cssOutDir, "site.css");
+        File.WriteAllText(defaultDest, Globals.DefaultCss);
+        Console.WriteLine($"Wrote built-in default stylesheet -> {defaultDest}");
     }
     
 
