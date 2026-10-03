@@ -39,16 +39,43 @@ public class HtmlGeneratorTests : IDisposable
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, name + ".md"), content);
     }
+    
+    [Fact]
+    public void Generate_WritesStylesheetToOutputCssDirectory()
+    {
+        WriteIndex();
+        Directory.CreateDirectory(Path.Combine(_inputDir, "css"));
+        File.WriteAllText(Path.Combine(_inputDir, "css", "site.css"), "body { color: red; }");
+
+        Build().Generate("index.md");
+
+        var cssOut = Path.Combine(_outputDir, "css", "site.css");
+        File.Exists(cssOut).Should().BeTrue();
+        File.ReadAllText(cssOut).Should().Contain("color: red");
+    }
+
+    [Fact]
+    public void Generate_IndexHtml_ReferencesStylesheet()
+    {
+        WriteIndex();
+        Directory.CreateDirectory(Path.Combine(_inputDir, "css"));
+        File.WriteAllText(Path.Combine(_inputDir, "css", "site.css"), "body { color: red; }");
+
+        Build().Generate("index.md");
+
+        var html = File.ReadAllText(Path.Combine(_outputDir, "index.html"));
+        html.Should().Contain("<link rel=\"stylesheet\" href=\"/css/site.css\" />");
+    }
 
     private HtmlGenerator Build(
         string title = "Test Site",
         string baseUrl = "https://example.com",
         int postsPerPage = 0,
-        List<string> postsTitles = null,
+        List<string> postsTitles = null!,
         bool rssFeed = false,
         bool rssIcon = false,
         bool favicon = false,
-        List<string> otherPages = null,
+        List<string> otherPages = null!,
         string css = "")
     {
         return new HtmlGenerator(

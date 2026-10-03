@@ -60,6 +60,9 @@ public class HtmlGenerator
     {
         try
         {
+            // 0. Write the stylesheet first, so every page's <link> resolves.
+            WriteCssFile();
+            
             // 1. Build the shared nav (post sections + extra pages)
             var navHtml = BuildNavigation();
 
@@ -90,6 +93,47 @@ public class HtmlGenerator
         {
             return Result.Fail(new Error($"Unhandled exception during generation: {ex.Message}"));
         }
+    }
+    
+    
+    private void WriteCssFile()
+    {
+        var cssOutDir = Path.Combine(_outputDir, "css");
+        Directory.CreateDirectory(cssOutDir);
+
+        // Explicitly requested CSS: find it and copy verbatim.
+        if (!string.IsNullOrEmpty(_css))
+        {
+            var candidates = new[]
+            {
+                Path.Combine(_inputDir, _css),
+                Path.Combine(_inputDir, "css", _css),
+                Path.Combine(_inputDir, "css", Path.GetFileName(_css))
+            };
+
+            var source = candidates.FirstOrDefault(File.Exists);
+            if (source == null)
+            {
+                throw new FileNotFoundException(
+                    $"CSS file '{_css}' was specified but could not be located in input/ or input/css/.");
+            }
+
+            var destName = Path.GetFileName(source);
+            File.Copy(source, Path.Combine(cssOutDir, destName), overwrite: true);
+            Console.WriteLine($"Copied {source} -> {Path.Combine(cssOutDir, destName)}");
+            return;
+        }
+
+        // No CSS specified: copy a default site.css if one exists.
+        var defaultSource = Path.Combine(_inputDir, "css", "site.css");
+        if (File.Exists(defaultSource))
+        {
+            File.Copy(defaultSource, Path.Combine(cssOutDir, "site.css"), overwrite: true);
+            Console.WriteLine($"Copied {defaultSource} -> {Path.Combine(cssOutDir, "site.css")}");
+        }
+        // Nothing to copy: pages will still reference /css/site.css, but it will 404.
+        // That's the same failure mode as before, but now it only happens when the
+        // user genuinely has no CSS at all.
     }
     
 
@@ -377,10 +421,14 @@ public class HtmlGenerator
         sb.AppendLine("  <meta charset=\"utf-8\" />");
         sb.AppendLine("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
         sb.AppendLine($"  <title>{System.Net.WebUtility.HtmlEncode(title)}</title>");
+        
+        var cssHref = string.IsNullOrEmpty(_css)
+            ? "/css/site.css"
+            : $"/css/{Path.GetFileName(_css)}";
 
         if (!string.IsNullOrEmpty(_css))
         {
-            sb.AppendLine($"  <link rel=\"stylesheet\" href=\"/css/{_css}\" />");
+            sb.AppendLine($"  <link rel=\"stylesheet\" href=\"{cssHref}\" />");
         }
         else
         {

@@ -100,7 +100,7 @@ public class OpenGraphHelperTests
     public void GenerateDescription_EmptyInput_ReturnsEmpty()
     {
         OpenGraphHelper.GenerateDescription("", 200).Should().BeEmpty();
-        OpenGraphHelper.GenerateDescription(null, 200).Should().BeEmpty();
+        OpenGraphHelper.GenerateDescription(null!, 200).Should().BeEmpty();
     }
 
     [Fact]
