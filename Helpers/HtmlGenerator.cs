@@ -535,22 +535,91 @@ namespace Markerator
         // --------------------------------------------------------------------
 
         private static (DateTime? date, string title, string cleanMarkdown)
-            ExtractAndStripDateHeader(string markdown)
+    ExtractAndStripDateHeader(string markdown)
         {
+            if (string.IsNullOrEmpty(markdown))
+                return (null, null, markdown);
+
+            // Strip a UTF-8 BOM if present — `File.ReadAllText` sometimes leaves it,
+            // and it would otherwise appear before the leading '#'.
+            markdown = markdown.TrimStart('\uFEFF');
+
+            // Match an H1..H6 whose text starts with a date. Allow leading whitespace,
+            // and allow the heading to start after blank lines.
+            //   2024-03-01 Some Title
+            //   2024-03-01
+            //   03/01/2024 Some Title
+            //   3/1/2024 Some Title
+            //   03/01 Some Title       (year supplied via fallback below)
             var match = Regex.Match(
                 markdown,
-                @"^#\s+(\d{4}-\d{2}-\d{2})\s*(.*)$",
+                @"^[ \t]*#{1,6}[ \t]+(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})[ \t]*(.*?)[ \t]*$",
                 RegexOptions.Multiline);
 
-            if (match.Success && DateTime.TryParse(match.Groups[1].Value, out var parsedDate))
+            DateTime? parsedDate = null;
+
+            if (match.Success)
+            {
+                var dateString = match.Groups[1].Value;
+
+                if (DateTime.TryParse(dateString, out var d1))
+                {
+                    parsedDate = d1;
+                }
+                else if (DateTime.TryParseExact(
+                             dateString,
+                             new[] { "yyyy-MM-dd", "M/d/yyyy", "MM/dd/yyyy" },
+                             System.Globalization.CultureInfo.InvariantCulture,
+                             System.Globalization.DateTimeStyles.None,
+                             out var d2))
+                {
+                    parsedDate = d2;
+                }
+            }
+
+            if (parsedDate.HasValue)
             {
                 var title = match.Groups[2].Value.Trim();
                 var cleaned = markdown.Remove(match.Index, match.Length).TrimStart();
                 return (parsedDate, title, cleaned);
             }
 
+            // Fallback: try to find a bare date like "01/25" or "01/25 - Title" as used by older posts,
+            // and a trailing year mention like "2023" as the assumed year.
+            var shortMatch = Regex.Match(
+                markdown,
+                @"^[ \t]*#{1,6}[ \t]+(\d{1,2}/\d{1,2})[ \t]*-?[ \t]*(.*?)[ \t]*$",
+                RegexOptions.Multiline);
+
+            if (shortMatch.Success)
+            {
+                // Look for a 4-digit year anywhere else in the file.
+                var yearMatch = Regex.Match(markdown, @"\b(20\d{2})\b");
+                var year = yearMatch.Success
+                    ? int.Parse(yearMatch.Groups[1].Value)
+                    : DateTime.Now.Year;
+
+                var parts = shortMatch.Groups[1].Value.Split('/');
+                if (parts.Length == 2
+                    && int.TryParse(parts[0], out var month)
+                    && int.TryParse(parts[1], out var day))
+                {
+                    try
+                    {
+                        var date = new DateTime(year, month, day);
+                        var title = shortMatch.Groups[2].Value.Trim();
+                        var cleaned = markdown.Remove(shortMatch.Index, shortMatch.Length).TrimStart();
+                        return (date, title, cleaned);
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        // Invalid month/day combination: fall through to undated.
+                    }
+                }
+            }
+
             // No date header: try to derive a title from an H1 if present.
-            var h1 = Regex.Match(markdown, @"^#\s+(.+)$", RegexOptions.Multiline);
+            var h1 = Regex.Match(markdown, @"^[ \t]*#{1,6}[ \t]+(.+)$", RegexOptions.Multiline);
             var fallbackTitle = h1.Success ? h1.Groups[1].Value.Trim() : null;
 
             return (null, fallbackTitle, markdown);

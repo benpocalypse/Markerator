@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using Markerator.Abstractions;
 
@@ -58,43 +59,70 @@ namespace Markerator.Helpers
         {
             if (string.IsNullOrEmpty(markdownContent)) return string.Empty;
 
-            var cleanText = markdownContent;
-            cleanText = Regex.Replace(cleanText, @"^#+\s+.*$", "", RegexOptions.Multiline);
-            cleanText = Regex.Replace(cleanText, @"!\[[^\]]*\]\([^\)]+\)", "");
-            cleanText = Regex.Replace(cleanText, @"\[([^\]]+)\]\([^\)]+\)", "$1");
-            cleanText = Regex.Replace(cleanText, @"```[\s\S]*?```", "");
-            cleanText = Regex.Replace(cleanText, @"`[^`]+`", "");
-            cleanText = Regex.Replace(cleanText, @"(\*\*|__|\*|_)", "");
-            cleanText = Regex.Replace(cleanText, @"\s+", " ").Trim();
+            // Work line-by-line so we can grab the first real paragraph and stop.
+            var lines = markdownContent.Replace("\r\n", "\n").Split('\n');
 
-            if (string.IsNullOrEmpty(cleanText)) return string.Empty;
+            var paragraph = new StringBuilder();
+            bool inCodeFence = false;
+            bool seenHeading = false;
 
-            var sentences = Regex.Split(cleanText, @"(?<=[.!?])\s+");
-            if (sentences.Length > 0 && sentences[0].Length <= maxLength)
-                return sentences[0];
-
-            if (cleanText.Length <= maxLength) return cleanText;
-
-            return cleanText.Substring(0, maxLength).TrimEnd() + "...";
-        }
-
-        public static string GetDefaultOgImagePath(string inputDirectory)
-        {
-            var possiblePaths = new[]
+            foreach (var rawLine in lines)
             {
-                Path.Combine(inputDirectory, "images", "cardimage.png"),
-                Path.Combine(inputDirectory, "images", "og-image.jpg"),
-                Path.Combine(inputDirectory, "images", "og-image.png"),
-                Path.Combine(inputDirectory, "images", "social.jpg"),
-                Path.Combine(inputDirectory, "images", "social.png")
-            };
+                var line = rawLine.TrimEnd();
 
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path)) return path;
+                // Skip fenced code blocks entirely.
+                if (line.TrimStart().StartsWith("```"))
+                {
+                    inCodeFence = !inCodeFence;
+                    continue;
+                }
+                if (inCodeFence) continue;
+
+                // Skip headings (but note that we've passed one).
+                if (Regex.IsMatch(line, @"^\s*#{1,6}\s"))
+                {
+                    seenHeading = true;
+                    continue;
+                }
+
+                // Blank line ends a paragraph.
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    if (paragraph.Length > 0) break;
+                    continue;
+                }
+
+                // Skip horizontal rules and images-only lines.
+                if (Regex.IsMatch(line, @"^\s*(-{3,}|\*{3,}|_{3,})\s*$")) continue;
+                if (Regex.IsMatch(line, @"^\s*!\[[^\]]*\]\([^\)]+\)\s*$")) continue;
+
+                // Accumulate text into the first paragraph.
+                paragraph.AppendLine(line);
             }
 
-            return string.Empty;
+            var text = paragraph.ToString().Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                // Fall back: if the whole file is just a heading, use its text.
+                var h1 = Regex.Match(markdownContent, @"^[ \t]*#{1,6}[ \t]+(.+)$", RegexOptions.Multiline);
+                if (h1.Success) text = h1.Groups[1].Value.Trim();
+            }
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+
+            // Clean up inline markdown inside the paragraph.
+            text = Regex.Replace(text, @"!\[[^\]]*\]\([^\)]+\)", "");         // images
+            text = Regex.Replace(text, @"\[([^\]]+)\]\([^\)]+\)", "$1");      // links keep text
+            text = Regex.Replace(text, @"`([^`]+)`", "$1");                    // inline code
+            text = Regex.Replace(text, @"(\*\*|__|\*|_)", "");                 // emphasis
+            text = Regex.Replace(text, @"\s+", " ").Trim();
+
+            if (text.Length <= maxLength) return text;
+
+            // Prefer to end at a sentence boundary near maxLength.
+            var cut = text.LastIndexOfAny(new[] { '.', '!', '?' }, maxLength - 1);
+            if (cut > maxLength / 2) return text.Substring(0, cut + 1);
+
+            return text.Substring(0, maxLength).TrimEnd() + "...";
         }
     }
 }
