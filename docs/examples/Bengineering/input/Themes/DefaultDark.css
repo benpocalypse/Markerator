@@ -1,0 +1,183 @@
+/* ============================================================
+   DarkDefault
+   A dark counterpart to Markerator's built-in default theme.
+   Preserves the red accent family from the default, tuned for
+   contrast on a warm near-black background.
+   ============================================================ */
+
+.navigation-title {
+    overflow: hidden;
+    position: fixed;
+    top: 0px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #1a1614;   /* warm near-black */
+}
+
+.navigation-title a {
+    float: left;
+    color: #f0a3a3;              /* lightened red accent — ~7.2:1 on #1a1614 */
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 22px;
+}
+
+.navigation {
+    overflow: hidden;
+    position: fixed;
+    top: 35px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #1a1614;
+}
+
+.navigation a {
+    float: left;
+    color: #f0a3a3;
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.navigation a:hover {
+    color: #ffffff;
+}
+
+table, th, td {
+    border: 0px solid #3a3330;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 0px;
+    padding-right: 20px;
+}
+
+.dropdownbutton {
+    background-color: #2a2422;
+    color: #f0a3a3;
+    font-size: 16px;
+    padding: 6px;
+    padding-right: 40px;
+    border: none;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    float: right;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #241f1c;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.6);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: #e8e2dd;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #3a3330;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+.content {
+    padding-left: 20%;
+    padding-right: 20%;
+    padding-top: 40px;
+    padding-bottom: 100px;
+}
+
+.content a {
+    color: #f0a3a3;
+    text-align: left;
+    text-decoration: none;
+}
+
+.content a:hover {
+    color: #ffffff;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2rem 0;
+    font-size: 0.95rem;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination-current,
+.pagination-prev,
+.pagination-next {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #3a3330;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #e8e2dd;
+}
+
+.pagination-current {
+    background: #f0a3a3;
+    color: #1a1614;
+    border-color: #f0a3a3;
+    font-weight: bold;
+}
+
+.pagination .disabled {
+    color: #6b625c;
+    border-color: #2a2422;
+    cursor: not-allowed;
+}
+
+head {
+    margin-left: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #f2ede8;               /* near-white headings — ~15:1 on #1a1614 */
+}
+
+body {
+    background-color: #1a1614;
+    color: #d8d2cc;               /* ~9:1 on #1a1614 */
+    margin-left: 0;
+    padding-top: 0;
+}
+
+footer {
+    text-align: center;
+    padding: 6px;
+    background-color: #1a1614;
+    color: #a39b94;               /* ~5.5:1 on #1a1614 */
+    font-size: 12px;
+}

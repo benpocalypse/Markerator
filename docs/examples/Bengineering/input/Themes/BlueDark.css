@@ -1,0 +1,183 @@
+/* ============================================================
+   DarkBlue
+   A dark counterpart to the Blue theme. Background is a deep
+   navy-slate; accents are a light cyan-blue tuned for AA
+   contrast on the dark background.
+   ============================================================ */
+
+.navigation-title {
+    overflow: hidden;
+    position: fixed;
+    top: 0px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #0f1724;   /* deep navy-slate */
+}
+
+.navigation-title a {
+    float: left;
+    color: #8ec5ff;              /* light cyan-blue — ~8.9:1 on #0f1724 */
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 22px;
+}
+
+.navigation {
+    overflow: hidden;
+    position: fixed;
+    top: 35px;
+    margin-left: 0;
+    padding-left: 40%;
+    width: 100%;
+    align-items: center;
+    background-color: #0f1724;
+}
+
+.navigation a {
+    float: left;
+    color: #8ec5ff;
+    text-align: center;
+    padding: 10px 16px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.navigation a:hover {
+    color: #ffffff;
+}
+
+table, th, td {
+    border: 0px solid #2a3548;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 0px;
+    padding-right: 20px;
+}
+
+.dropdownbutton {
+    background-color: #1a2438;
+    color: #8ec5ff;
+    font-size: 16px;
+    padding: 6px;
+    padding-right: 40px;
+    border: none;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    float: right;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #131c2c;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.7);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: #d5e2f2;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #24314a;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #3e8e41;
+}
+
+.content {
+    padding-left: 20%;
+    padding-right: 20%;
+    padding-top: 40px;
+    padding-bottom: 100px;
+}
+
+.content a {
+    color: #8ec5ff;              /* ~8.9:1 on #0f1724 */
+    text-align: left;
+    text-decoration: none;
+}
+
+.content a:hover {
+    color: #ffffff;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2rem 0;
+    font-size: 0.95rem;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination-current,
+.pagination-prev,
+.pagination-next {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #2a3548;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #d5e2f2;
+}
+
+.pagination-current {
+    background: #8ec5ff;
+    color: #0f1724;
+    border-color: #8ec5ff;
+    font-weight: bold;
+}
+
+.pagination .disabled {
+    color: #4b566b;
+    border-color: #1a2438;
+    cursor: not-allowed;
+}
+
+head {
+    margin-left: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #e6eef9;               /* ~13.5:1 on #0f1724 */
+}
+
+body {
+    background-color: #0f1724;
+    color: #c8d4e4;               /* ~10.5:1 on #0f1724 */
+    margin-left: 0;
+    padding-top: 0;
+}
+
+footer {
+    text-align: center;
+    padding: 6px;
+    background-color: #0f1724;
+    color: #8d9bb0;               /* ~5.7:1 on #0f1724 */
+    font-size: 12px;
+}

@@ -24,6 +24,8 @@ All that being said, this site only makes use of HTML and CSS. No cookies, no ja
 <br/>
 <br/>
 
+<a rel="me" href="https://mastodon.social/@benpocalypse">Mastodon</a>
+
 ### Copyright and license
 Copyright &copy; 2022 - present, Bengineering.
 
