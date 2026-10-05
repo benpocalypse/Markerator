@@ -22,7 +22,7 @@ public static class MarkeratorExtensions
         }
     }
 
-    public static void IsNullOrEmpty<T>(this IReadOnlyList<T>? list, Action then)
+    public static void IsNullOrEmpty<T>(this IList<T>? list, Action then)
     {
         if (list != null || list?.Count != 0)
         {
