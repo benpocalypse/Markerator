@@ -4,8 +4,9 @@ using System.Text.RegularExpressions;
 using FluentResults;
 using Markdig;
 using Markerator.Abstractions;
+using Markerator.Helpers;
 
-namespace Markerator.Helpers
+namespace Markerator
 {
     public class HtmlGenerator
     {
@@ -281,6 +282,51 @@ namespace Markerator.Helpers
                     }
                 }
 
+                if (pages[i].Count == 0)
+                {
+                    bodyBuilder.AppendLine("<p>No posts yet.</p>");
+                }
+                else
+                {
+                    // Group the posts on this page by year (dated posts) or "All" (undated).
+                    // GroupBy preserves the source order within each group, and `pages[i]`
+                    // is already sorted newest-first, so posts appear in the right order.
+                    var groups = pages[i]
+                        .GroupBy(p => p.Date.HasValue
+                            ? p.Date.Value.Year.ToString()
+                            : "All");
+
+                    // Sort the groups: years descending, then "All" last.
+                    var orderedGroups = groups
+                        .OrderByDescending(g => g.Key == "All"
+                            ? int.MinValue
+                            : int.Parse(g.Key));
+
+                    foreach (var group in orderedGroups)
+                    {
+                        bodyBuilder.AppendLine($"<h3>{group.Key}</h3>");
+
+                        foreach (var post in group)
+                        {
+                            var link = $"/{sectionName}/{post.FileName}.html";
+                            var titleText = WebUtility.HtmlEncode(post.Title);
+
+                            if (post.Date.HasValue)
+                            {
+                                var dateStr = post.Date.Value.ToString("MM/dd");
+                                bodyBuilder.AppendLine($"<a href=\"{link}\">{dateStr} - {titleText}</a><br/>");
+                            }
+                            else
+                            {
+                                bodyBuilder.AppendLine($"<a href=\"{link}\">{titleText}</a><br/>");
+                            }
+
+                            bodyBuilder.AppendLine(WebUtility.HtmlEncode(post.Summary));
+                            bodyBuilder.AppendLine("<br/>");
+                            bodyBuilder.AppendLine("<br/>");
+                        }
+                    }
+                }
 
                 bodyBuilder.AppendLine(PaginationHelper.GeneratePaginationLinks(
                     sectionName, pageNumber, totalPages, _baseUrl));
@@ -540,7 +586,7 @@ namespace Markerator.Helpers
                 return "/images/rss.jpg";
             if (File.Exists(Path.Combine(_inputDir, "images", "rss.png")))
                 return "/images/rss.png";
-            return string.Empty;
+            return null;
         }
     }
 }
