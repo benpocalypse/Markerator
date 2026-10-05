@@ -1,33 +1,31 @@
+using System;
 using System.Text;
 
 namespace Markerator.Abstractions
 {
     public class OpenGraphData
     {
-        public string Title { get; init; } = null!;
-        public string Description { get; init; } = null!;
-        public string ImageUrl { get; init; } = null!;
-        public string Url { get; init; } = null!;
-        public string Type { get; init; } = "website";
-        public string SiteName { get; init; } = null!;
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string ImageUrl { get; set; }
+        public string Url { get; set; }
+        public string Type { get; set; } = "website";
+        public string SiteName { get; set; }
 
-        // Optional Twitter Card specific
-        private string TwitterCard { get; set; } = "summary_large_image";
-        private string TwitterSite { get; set; } = null!;
+        // Twitter Card
+        public string TwitterCard { get; set; } = "summary_large_image";
+        public string TwitterSite { get; set; }
 
         public string GenerateMetaTags()
         {
             var sb = new StringBuilder();
 
+            // ---- Open Graph ----
             if (!string.IsNullOrEmpty(Title))
-            {
                 sb.AppendLine($"<meta property=\"og:title\" content=\"{EscapeHtml(Title)}\" />");
-            }
 
             if (!string.IsNullOrEmpty(Description))
-            {
                 sb.AppendLine($"<meta property=\"og:description\" content=\"{EscapeHtml(Description)}\" />");
-            }
 
             if (!string.IsNullOrEmpty(ImageUrl))
             {
@@ -37,45 +35,35 @@ namespace Markerator.Abstractions
             }
 
             if (!string.IsNullOrEmpty(Url))
-            {
                 sb.AppendLine($"<meta property=\"og:url\" content=\"{EscapeHtml(Url)}\" />");
-            }
 
             if (!string.IsNullOrEmpty(Type))
-            {
                 sb.AppendLine($"<meta property=\"og:type\" content=\"{EscapeHtml(Type)}\" />");
-            }
 
             if (!string.IsNullOrEmpty(SiteName))
-            {
                 sb.AppendLine($"<meta property=\"og:site_name\" content=\"{EscapeHtml(SiteName)}\" />");
-            }
 
-            // Twitter Card tags for better cross-platform support
+            // ---- Twitter Card (matches old 0.6.0 output, which used value= not content=) ----
             if (!string.IsNullOrEmpty(TwitterCard))
-            {
-                sb.AppendLine($"<meta name=\"twitter:card\" content=\"{EscapeHtml(TwitterCard)}\" />");
-            }
+                sb.AppendLine($"<meta name=\"twitter:card\" value=\"{EscapeHtml(TwitterCard)}\" />");
+
+            if (!string.IsNullOrEmpty(Url) && Uri.TryCreate(Url, UriKind.Absolute, out var uri))
+                sb.AppendLine($"<meta name=\"twitter:domain\" value=\"{EscapeHtml(uri.Host)}\" />");
 
             if (!string.IsNullOrEmpty(Title))
-            {
-                sb.AppendLine($"<meta name=\"twitter:title\" content=\"{EscapeHtml(Title)}\" />");
-            }
+                sb.AppendLine($"<meta name=\"twitter:title\" value=\"{EscapeHtml(Title)}\" />");
 
             if (!string.IsNullOrEmpty(Description))
-            {
-                sb.AppendLine($"<meta name=\"twitter:description\" content=\"{EscapeHtml(Description)}\" />");
-            }
+                sb.AppendLine($"<meta name=\"twitter:description\" value=\"{EscapeHtml(Description)}\" />");
 
             if (!string.IsNullOrEmpty(ImageUrl))
-            {
-                sb.AppendLine($"<meta name=\"twitter:image\" content=\"{EscapeHtml(ImageUrl)}\" />");
-            }
+                sb.AppendLine($"<meta name=\"twitter:image\" value=\"{EscapeHtml(ImageUrl)}\" />");
+
+            if (!string.IsNullOrEmpty(Url))
+                sb.AppendLine($"<meta name=\"twitter:url\" value=\"{EscapeHtml(Url)}\" />");
 
             if (!string.IsNullOrEmpty(TwitterSite))
-            {
-                sb.AppendLine($"<meta name=\"twitter:site\" content=\"{EscapeHtml(TwitterSite)}\" />");
-            }
+                sb.AppendLine($"<meta name=\"twitter:site\" value=\"{EscapeHtml(TwitterSite)}\" />");
 
             return sb.ToString();
         }
