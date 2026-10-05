@@ -236,7 +236,15 @@ namespace Markerator
                 var htmlContent = Markdown.ToHtml(cleanMarkdown, _markdownPipeline);
                 var fileName = Path.GetFileNameWithoutExtension(file);
 
-                var derivedTitle = string.IsNullOrWhiteSpace(parsedTitle) ? fileName : parsedTitle;
+                // Title resolution order:
+                //   1. The title captured from a dated H1 header ("# YYYY-MM-DD Title").
+                //   2. The first H2 heading ("## Title") in the markdown body.
+                //   3. The filename without extension (last-resort fallback).
+                var h2Title = ExtractFirstH2Title(cleanMarkdown);
+                var derivedTitle =
+                    !string.IsNullOrWhiteSpace(parsedTitle) ? parsedTitle :
+                    !string.IsNullOrWhiteSpace(h2Title)     ? h2Title :
+                    fileName;
 
                 posts.Add(new PostEntry
                 {
@@ -399,6 +407,24 @@ namespace Markerator
 
             return Result.Ok();
         }
+        
+        
+        private static string ExtractFirstH2Title(string markdown)
+        {
+            if (string.IsNullOrEmpty(markdown)) return null;
+
+            // Strip a UTF-8 BOM if present.
+            markdown = markdown.TrimStart('\uFEFF');
+
+            // Find the first H2 heading (## Title). Allow leading whitespace on the line.
+            var match = Regex.Match(
+                markdown,
+                @"^[ \t]*##[ \t]+(.+?)[ \t]*$",
+                RegexOptions.Multiline);
+
+            return match.Success ? match.Groups[1].Value.Trim() : null;
+        }
+        
 
         // --------------------------------------------------------------------
         // Extra standalone pages
