@@ -105,6 +105,8 @@ namespace Markerator
         {
             var cssOutDir = Path.Combine(_outputDir, "css");
             Directory.CreateDirectory(cssOutDir);
+            
+            Console.WriteLine(@$"Created directory output/{cssOutDir} to store CSS files.");
 
             // 1. Explicitly requested CSS: find it and copy verbatim.
             if (!string.IsNullOrEmpty(_css))
@@ -113,7 +115,11 @@ namespace Markerator
                 {
                     Path.Combine(_inputDir, _css),
                     Path.Combine(_inputDir, "css", _css),
-                    Path.Combine(_inputDir, "css", Path.GetFileName(_css))
+                    Path.Combine(_inputDir, "Themes", _css),
+                    Path.Combine(_inputDir, "themes", _css),
+                    Path.Combine(_inputDir, "css", Path.GetFileName(_css)),
+                    Path.Combine(_inputDir, "Themes", Path.GetFileName(_css)),
+                    Path.Combine(_inputDir, "themes", Path.GetFileName(_css))
                 };
 
                 var source = candidates.FirstOrDefault(File.Exists);
