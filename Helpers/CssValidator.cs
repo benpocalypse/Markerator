@@ -3,9 +3,19 @@ using FluentResults;
 
 namespace Markerator.Helpers;
 
+/// <summary>
+/// This class is leveraged  
+/// </summary>
 public static class CssValidator
 {
-        public static Result<string> ValidateAndGetCustomCssContents(string cssFilenames)
+    /// <summary>
+    /// This function will validate that the passed in CSS file contains the correct elements to allow the supplied
+    /// file to correctly theme the generated website. If the validation fails, the built-in default CSS will be used.
+    /// </summary>
+    /// <param name="cssFilenames">The name and location of the provided CSS file.</param>
+    /// <returns>Either the custom CSS, or the default CSS upon failure.</returns>
+    /// <exception cref="Exception">Using the FluentResult library, this will bubble up the exception to the caller.</exception>
+    public static Result<string> ValidateAndGetCustomCssContents(string cssFilenames)
     {
         return Result.Try<string>(() =>
         {
@@ -34,6 +44,7 @@ public static class CssValidator
             }
 
             Console.WriteLine("Returning custom Css.");
+            
             return cssContent;
         });
     }

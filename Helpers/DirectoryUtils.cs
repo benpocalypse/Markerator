@@ -1,37 +1,34 @@
 namespace Markerator.Helpers;
 
+/// <summary>
+/// This class contains helper utility functions to help deal with the file/directory based operations. 
+/// </summary>
 public static class DirectoryUtils
 {
     private static void DeleteOutputDirectorsIfExists()
     {
-        if (Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output")))
-        {
-            Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "output"), true);
-        }
+        Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output"))
+            .IfTrue(() => Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "output"), true));
     }
 
+    /// <summary>
+    /// This function creates the directories/subfolders that end up in the output/ folder that will eventually
+    /// contain the generated files.
+    /// </summary>
     public static void CreateOutputDirectories()
     {
         // TODO: Spit out a message about what the actual proper directory structure for input should look like.
         Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output"));
 
-        if (Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "input", "images")))
-        {
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
-            CopyDirectory(
-                sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
-                targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
-            );
-        }
-
-        if (Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "input", "fonts")))
-        {
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "fonts"));
-            CopyDirectory(
-                sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "fonts"),
-                targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "fonts")
-            );
-        }
+        Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "input", "images"))
+            .IfTrue(() =>
+            {
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output", "images"));
+                CopyDirectory(
+                    sourceDirectory: Path.Combine(Directory.GetCurrentDirectory(), "input", "images"),
+                    targetDirectory: Path.Combine(Directory.GetCurrentDirectory(), "output", "images")
+                );
+            });
     }
 
     private static void CopyDirectory(string sourceDirectory, string targetDirectory)

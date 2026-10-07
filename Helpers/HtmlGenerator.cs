@@ -4,10 +4,14 @@ using System.Text.RegularExpressions;
 using FluentResults;
 using Markdig;
 using Markerator.Abstractions;
-using Markerator.Helpers;
 
-namespace Markerator
+namespace Markerator.Helpers
 {
+    /// <summary>
+    /// Orchestrates generation of a Markerator site: reads markdown from the input
+    /// directory, renders it to HTML, copies asset folders, and writes the resulting
+    /// site tree to the output directory.
+    /// </summary>
     public class HtmlGenerator
     {
         private readonly string _siteTitle;
@@ -25,6 +29,21 @@ namespace Markerator
         private readonly MarkdownPipeline _markdownPipeline;
         private readonly string _defaultOgImageUrl;
 
+        /// <summary>
+        /// Initializes a new <see cref="HtmlGenerator"/> with the paths and options
+        /// needed for a single site generation run.
+        /// </summary>
+        /// <param name="title">The site title, used in nav, <c>&lt;title&gt;</c>, and OG metadata.</param>
+        /// <param name="baseUrl">The base URL, with any trailing slash stripped.</param>
+        /// <param name="inputDir">The absolute path to the input directory.</param>
+        /// <param name="outputDir">The absolute path to the output directory.</param>
+        /// <param name="css">Optional custom CSS file name; if empty, a built-in default is used.</param>
+        /// <param name="favicon">Whether to emit a favicon <c>&lt;link&gt;</c>.</param>
+        /// <param name="rssFeed">Whether to generate RSS feeds for each post section.</param>
+        /// <param name="rssIcon">Whether to render an RSS icon on section pages.</param>
+        /// <param name="postsPerPage">The number of posts per section page; 0 disables pagination.</param>
+        /// <param name="postsTitles">The names of the post sections (e.g. News, Blog).</param>
+        /// <param name="otherPages">Additional markdown page file names to render.</param>
         public HtmlGenerator(
             string title,
             string baseUrl,
@@ -57,16 +76,23 @@ namespace Markerator
             _defaultOgImageUrl = ResolveDefaultOgImageUrl();
         }
 
-        // --------------------------------------------------------------------
-        // Public entry point
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Runs the full generation pipeline: writes the stylesheet, copies asset
+        /// folders, builds the shared navigation, and generates the index, post
+        /// section, and extra pages. Returns a failed <see cref="Result"/> if any
+        /// step throws or if the index file is missing.
+        /// </summary>
+        /// <param name="indexFile">The markdown file to render as index.html.</param>
+        /// <returns>A <see cref="Result"/> indicating success or carrying error messages.</returns>
         public Result Generate(string indexFile)
         {
             try
             {
                 // 0. Write the stylesheet first, so every page's <link> resolves.
                 WriteCssFile();
+
+                // 0b. Copy asset folders (images/, fonts/, etc.) to output/.
+                CopyAssetFolders();
 
                 // 1. Build the shared nav.
                 var navHtml = BuildNavigation();
@@ -97,16 +123,16 @@ namespace Markerator
             }
         }
 
-        // --------------------------------------------------------------------
-        // CSS handling
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Resolves and writes the site stylesheet to <c>output/css/</c>. Prefers an
+        /// explicitly requested CSS file, falls back to <c>input/css/site.css</c>,
+        /// and finally writes <see cref="Globals.DefaultCss"/> so the stylesheet link
+        /// always resolves.
+        /// </summary>
         private void WriteCssFile()
         {
             var cssOutDir = Path.Combine(_outputDir, "css");
             Directory.CreateDirectory(cssOutDir);
-            
-            Console.WriteLine(@$"Created directory output/{cssOutDir} to store CSS files.");
 
             // 1. Explicitly requested CSS: find it and copy verbatim.
             if (!string.IsNullOrEmpty(_css))
@@ -115,11 +141,7 @@ namespace Markerator
                 {
                     Path.Combine(_inputDir, _css),
                     Path.Combine(_inputDir, "css", _css),
-                    Path.Combine(_inputDir, "Themes", _css),
-                    Path.Combine(_inputDir, "themes", _css),
-                    Path.Combine(_inputDir, "css", Path.GetFileName(_css)),
-                    Path.Combine(_inputDir, "Themes", Path.GetFileName(_css)),
-                    Path.Combine(_inputDir, "themes", Path.GetFileName(_css))
+                    Path.Combine(_inputDir, "css", Path.GetFileName(_css))
                 };
 
                 var source = candidates.FirstOrDefault(File.Exists);
@@ -153,10 +175,88 @@ namespace Markerator
             Console.WriteLine($"Wrote built-in default stylesheet -> {defaultDest}");
         }
 
-        // --------------------------------------------------------------------
-        // Navigation
-        // --------------------------------------------------------------------
+        /// <summary>
+        /// Copies every folder under <c>input/</c> that does not contain markdown files
+        /// (recursively) to the corresponding location under <c>output/</c>. Folders
+        /// that contain markdown are treated as post sections and handled by
+        /// <see cref="GeneratePostsSection"/>; the <c>css/</c> and <c>Themes/</c>
+        /// folders are excluded because <see cref="WriteCssFile"/> already handles them.
+        /// Nested directory structure is preserved.
+        /// </summary>
+        private void CopyAssetFolders()
+        {
+            // Folders whose contents are already handled by WriteCssFile.
+            var excludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "css",
+                "Themes"
+            };
 
+            var topLevelDirs = Directory.GetDirectories(_inputDir, "*", SearchOption.TopDirectoryOnly);
+            if (topLevelDirs.Length == 0)
+            {
+                Console.WriteLine("No input subfolders found; skipping asset copy.");
+                return;
+            }
+
+            Console.WriteLine("------------------------------------------------------------");
+            Console.WriteLine("Copying asset folders");
+            Console.WriteLine($"  Source:      {_inputDir}");
+            Console.WriteLine($"  Destination: {_outputDir}");
+
+            int foldersCopied = 0;
+            int filesCopied = 0;
+
+            foreach (var sourceDir in topLevelDirs)
+            {
+                var folderName = Path.GetFileName(sourceDir);
+
+                if (excludedFolders.Contains(folderName))
+                {
+                    Console.WriteLine($"    Skipped: {folderName}/ (handled by WriteCssFile)");
+                    continue;
+                }
+
+                var markdownFiles = Directory.GetFiles(sourceDir, "*.md", SearchOption.AllDirectories);
+                if (markdownFiles.Length > 0)
+                {
+                    Console.WriteLine($"    Skipped: {folderName}/ (contains {markdownFiles.Length} markdown file(s))");
+                    continue;
+                }
+
+                var destDir = Path.Combine(_outputDir, folderName);
+                Directory.CreateDirectory(destDir);
+
+                var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
+                foreach (var sourceFile in files)
+                {
+                    var relative = Path.GetRelativePath(sourceDir, sourceFile);
+                    var destFile = Path.Combine(destDir, relative);
+
+                    var destFileDir = Path.GetDirectoryName(destFile);
+                    if (!string.IsNullOrEmpty(destFileDir))
+                    {
+                        Directory.CreateDirectory(destFileDir);
+                    }
+
+                    File.Copy(sourceFile, destFile, overwrite: true);
+                    filesCopied++;
+                }
+
+                Console.WriteLine($"    Copied: {folderName}/ ({files.Length} file(s))");
+                foldersCopied++;
+            }
+
+            Console.WriteLine($"  Copied {foldersCopied} folder(s) / {filesCopied} file(s).");
+            Console.WriteLine("------------------------------------------------------------");
+        }
+
+        /// <summary>
+        /// Builds the navigation HTML from the configured post sections and extra pages.
+        /// Each section links to its canonical first page (e.g. <c>/News.html</c>),
+        /// and each extra page links to <c>/{name}.html</c>.
+        /// </summary>
+        /// <returns>The rendered navigation markup.</returns>
         private string BuildNavigation()
         {
             var sb = new StringBuilder();
@@ -177,10 +277,13 @@ namespace Markerator
             return sb.ToString();
         }
 
-        // --------------------------------------------------------------------
-        // Index page
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Reads the index markdown file, renders it to HTML, and writes
+        /// <c>index.html</c> with the appropriate Open Graph metadata.
+        /// </summary>
+        /// <param name="indexFile">The markdown file name, relative to the input directory.</param>
+        /// <param name="navHtml">The shared navigation markup.</param>
+        /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
         private Result GenerateIndex(string indexFile, string navHtml)
         {
             var indexPath = Path.Combine(_inputDir, indexFile);
@@ -218,10 +321,15 @@ namespace Markerator
             return Result.Ok();
         }
 
-        // --------------------------------------------------------------------
-        // Posts sections
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Generates all pages for a single post section: the paginated section
+        /// listing(s), the individual post pages, and (optionally) the RSS feed.
+        /// Posts are sorted newest-first with undated posts last, and grouped by
+        /// year in the listing output.
+        /// </summary>
+        /// <param name="sectionName">The section name, matching a folder under <c>input/</c>.</param>
+        /// <param name="navHtml">The shared navigation markup.</param>
+        /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
         private Result GeneratePostsSection(string sectionName, string navHtml)
         {
             var sectionInput = Path.Combine(_inputDir, sectionName);
@@ -242,15 +350,7 @@ namespace Markerator
                 var htmlContent = Markdown.ToHtml(cleanMarkdown, _markdownPipeline);
                 var fileName = Path.GetFileNameWithoutExtension(file);
 
-                // Title resolution order:
-                //   1. The title captured from a dated H1 header ("# YYYY-MM-DD Title").
-                //   2. The first H2 heading ("## Title") in the markdown body.
-                //   3. The filename without extension (last-resort fallback).
-                var h2Title = ExtractFirstH2Title(cleanMarkdown);
-                var derivedTitle =
-                    !string.IsNullOrWhiteSpace(parsedTitle) ? parsedTitle :
-                    !string.IsNullOrWhiteSpace(h2Title)     ? h2Title :
-                    fileName;
+                var derivedTitle = string.IsNullOrWhiteSpace(parsedTitle) ? fileName : parsedTitle;
 
                 posts.Add(new PostEntry
                 {
@@ -302,15 +402,11 @@ namespace Markerator
                 }
                 else
                 {
-                    // Group the posts on this page by year (dated posts) or "All" (undated).
-                    // GroupBy preserves the source order within each group, and `pages[i]`
-                    // is already sorted newest-first, so posts appear in the right order.
                     var groups = pages[i]
                         .GroupBy(p => p.Date.HasValue
                             ? p.Date.Value.Year.ToString()
                             : "All");
 
-                    // Sort the groups: years descending, then "All" last.
                     var orderedGroups = groups
                         .OrderByDescending(g => g.Key == "All"
                             ? int.MinValue
@@ -413,29 +509,14 @@ namespace Markerator
 
             return Result.Ok();
         }
-        
-        
-        private static string ExtractFirstH2Title(string markdown)
-        {
-            if (string.IsNullOrEmpty(markdown)) return null;
 
-            // Strip a UTF-8 BOM if present.
-            markdown = markdown.TrimStart('\uFEFF');
-
-            // Find the first H2 heading (## Title). Allow leading whitespace on the line.
-            var match = Regex.Match(
-                markdown,
-                @"^[ \t]*##[ \t]+(.+?)[ \t]*$",
-                RegexOptions.Multiline);
-
-            return match.Success ? match.Groups[1].Value.Trim() : null;
-        }
-        
-
-        // --------------------------------------------------------------------
-        // Extra standalone pages
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Renders a single markdown file that is not part of a post section (for
+        /// example, an About or Contact page) and writes it as <c>output/{name}.html</c>.
+        /// </summary>
+        /// <param name="mdFileName">The markdown file name, relative to the input directory.</param>
+        /// <param name="navHtml">The shared navigation markup.</param>
+        /// <returns>A <see cref="Result"/> indicating success or failure.</returns>
         private Result GenerateSinglePage(string mdFileName, string navHtml)
         {
             var path = Path.Combine(_inputDir, mdFileName);
@@ -472,10 +553,16 @@ namespace Markerator
             return Result.Ok();
         }
 
-        // --------------------------------------------------------------------
-        // HTML template
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Assembles a complete HTML document from the given title, navigation,
+        /// body content, Open Graph metadata, and any additional head tags.
+        /// </summary>
+        /// <param name="title">The page title, rendered in <c>&lt;title&gt;</c>.</param>
+        /// <param name="navHtml">The shared navigation markup.</param>
+        /// <param name="bodyHtml">The main content markup for the page.</param>
+        /// <param name="ogData">The Open Graph metadata to render in the head.</param>
+        /// <param name="extraHeadTags">Additional markup to inject in the head (e.g. rel links).</param>
+        /// <returns>The complete HTML document as a string.</returns>
         private string BuildFullHtmlDocument(
             string title,
             string navHtml,
@@ -526,10 +613,12 @@ namespace Markerator
             return sb.ToString();
         }
 
-        // --------------------------------------------------------------------
-        // RSS
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Writes an RSS 2.0 feed for a post section to <c>output/{sectionName}.xml</c>.
+        /// Contains up to the 50 most recent posts, in the order they are supplied.
+        /// </summary>
+        /// <param name="sectionName">The section name, used for the feed title and output file.</param>
+        /// <param name="posts">The posts to include, in display order.</param>
         private void WriteRssFeed(string sectionName, List<PostEntry> posts)
         {
             var sb = new StringBuilder();
@@ -562,101 +651,45 @@ namespace Markerator
             Console.WriteLine($"Generated {outPath}");
         }
 
-        // --------------------------------------------------------------------
-        // Helpers
-        // --------------------------------------------------------------------
-
+        /// <summary>
+        /// Extracts a leading <c># YYYY-MM-DD Title</c> header from the markdown, if
+        /// present, returning the parsed date, the title, and the markdown with the
+        /// header line removed. If no dated header is found, the title is derived
+        /// from the first heading, and the markdown is returned unchanged.
+        /// </summary>
+        /// <param name="markdown">The raw markdown content of a post.</param>
+        /// <returns>
+        /// A tuple containing the parsed date (or null), the extracted title (or null),
+        /// and the cleaned markdown.
+        /// </returns>
         private static (DateTime? date, string title, string cleanMarkdown)
-    ExtractAndStripDateHeader(string markdown)
+            ExtractAndStripDateHeader(string markdown)
         {
-            if (string.IsNullOrEmpty(markdown))
-                return (null, null, markdown);
-
-            // Strip a UTF-8 BOM if present — `File.ReadAllText` sometimes leaves it,
-            // and it would otherwise appear before the leading '#'.
-            markdown = markdown.TrimStart('\uFEFF');
-
-            // Match an H1..H6 whose text starts with a date. Allow leading whitespace,
-            // and allow the heading to start after blank lines.
-            //   2024-03-01 Some Title
-            //   2024-03-01
-            //   03/01/2024 Some Title
-            //   3/1/2024 Some Title
-            //   03/01 Some Title       (year supplied via fallback below)
             var match = Regex.Match(
                 markdown,
-                @"^[ \t]*#{1,6}[ \t]+(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})[ \t]*(.*?)[ \t]*$",
+                @"^#\s+(\d{4}-\d{2}-\d{2})\s*(.*)$",
                 RegexOptions.Multiline);
 
-            DateTime? parsedDate = null;
-
-            if (match.Success)
-            {
-                var dateString = match.Groups[1].Value;
-
-                if (DateTime.TryParse(dateString, out var d1))
-                {
-                    parsedDate = d1;
-                }
-                else if (DateTime.TryParseExact(
-                             dateString,
-                             new[] { "yyyy-MM-dd", "M/d/yyyy", "MM/dd/yyyy" },
-                             System.Globalization.CultureInfo.InvariantCulture,
-                             System.Globalization.DateTimeStyles.None,
-                             out var d2))
-                {
-                    parsedDate = d2;
-                }
-            }
-
-            if (parsedDate.HasValue)
+            if (match.Success && DateTime.TryParse(match.Groups[1].Value, out var parsedDate))
             {
                 var title = match.Groups[2].Value.Trim();
                 var cleaned = markdown.Remove(match.Index, match.Length).TrimStart();
                 return (parsedDate, title, cleaned);
             }
 
-            // Fallback: try to find a bare date like "01/25" or "01/25 - Title" as used by older posts,
-            // and a trailing year mention like "2023" as the assumed year.
-            var shortMatch = Regex.Match(
-                markdown,
-                @"^[ \t]*#{1,6}[ \t]+(\d{1,2}/\d{1,2})[ \t]*-?[ \t]*(.*?)[ \t]*$",
-                RegexOptions.Multiline);
-
-            if (shortMatch.Success)
-            {
-                // Look for a 4-digit year anywhere else in the file.
-                var yearMatch = Regex.Match(markdown, @"\b(20\d{2})\b");
-                var year = yearMatch.Success
-                    ? int.Parse(yearMatch.Groups[1].Value)
-                    : DateTime.Now.Year;
-
-                var parts = shortMatch.Groups[1].Value.Split('/');
-                if (parts.Length == 2
-                    && int.TryParse(parts[0], out var month)
-                    && int.TryParse(parts[1], out var day))
-                {
-                    try
-                    {
-                        var date = new DateTime(year, month, day);
-                        var title = shortMatch.Groups[2].Value.Trim();
-                        var cleaned = markdown.Remove(shortMatch.Index, shortMatch.Length).TrimStart();
-                        return (date, title, cleaned);
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        // Invalid month/day combination: fall through to undated.
-                    }
-                }
-            }
-
             // No date header: try to derive a title from an H1 if present.
-            var h1 = Regex.Match(markdown, @"^[ \t]*#{1,6}[ \t]+(.+)$", RegexOptions.Multiline);
+            var h1 = Regex.Match(markdown, @"^#\s+(.+)$", RegexOptions.Multiline);
             var fallbackTitle = h1.Success ? h1.Groups[1].Value.Trim() : null;
 
-            return (null, fallbackTitle, markdown);
+            return (null, fallbackTitle, markdown)!;
         }
 
+        /// <summary>
+        /// Resolves the absolute URL of the site's default Open Graph image by
+        /// checking <c>input/images/</c> for a well-known filename. Falls back to
+        /// <c>cardimage.png</c> if none of the candidates exist.
+        /// </summary>
+        /// <returns>The absolute URL to use for Open Graph image metadata.</returns>
         private string ResolveDefaultOgImageUrl()
         {
             var candidates = new[]
@@ -681,13 +714,20 @@ namespace Markerator
             return $"{_baseUrl}/images/cardimage.png";
         }
 
+        /// <summary>
+        /// Resolves the site-relative URL of an RSS icon in <c>input/images/</c>,
+        /// preferring <c>rss.jpg</c> over <c>rss.png</c>.
+        /// </summary>
+        /// <returns>The relative URL of the icon, or <c>null</c> if neither file exists.</returns>
         private string ResolveRssIconUrl()
         {
             if (File.Exists(Path.Combine(_inputDir, "images", "rss.jpg")))
                 return "/images/rss.jpg";
+            
             if (File.Exists(Path.Combine(_inputDir, "images", "rss.png")))
                 return "/images/rss.png";
-            return null;
+            
+            return string.Empty;
         }
     }
 }

@@ -2,10 +2,21 @@
 using System.Xml;
 using Markerator.Abstractions;
 
-namespace Markerator.Helpers;
-
+namespace Markerator.Helpers; 
+/// <summary>
+/// The RssGenereator class handles generating the XML files that correspond to the Html conten that Markerator
+/// makes. This will allow a user to use an RSS reader to subscribe to the generated site. 
+/// </summary>
 public static class RssGenerator
 {
+    /// <summary>
+    /// This function does the nuts and bolts of generating the RSS Xml.
+    /// </summary>
+    /// <param name="feedTitle">The wesbite/feed title that will appear in the XML</param>
+    /// <param name="feedDescription">The website/feed description</param>
+    /// <param name="baseUri">The URL of the website</param>
+    /// <param name="posts">The contents of all the posts/entries for the generated site</param>
+    /// <returns></returns>
     public static SyndicationFeed GenerateRssFeed(string feedTitle, string feedDescription, Uri baseUri, IEnumerable<Post> posts)
     {
         SyndicationFeed feed = new SyndicationFeed(feedTitle, feedDescription, baseUri);
@@ -37,33 +48,37 @@ public static class RssGenerator
         return feed;
     }
 
+    /// <summary>
+    /// This function checks to make sure that a file named either "rss.png" or "rss.jpg" exists in the
+    /// output/images/ folder. Otherwise, the RSS generation will fail if this image doesn't exist.
+    /// </summary>
+    /// <returns>True if the file exists, False if it does not</returns>
     public static bool VerifyRssImageExistsInOutput()
     {
-        if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")) ||
-            File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg"))
-           )
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")) ||
+         File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg")))
+            .IfTrue(() => Console.WriteLine("Successfully found the RSS image."))
+            .OrElse(() => Console.WriteLine("Failed to find either rss.png or rss.jpg."));
+
+        return
+            (
+                File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")) ||
+                File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg"))
+            ).IfTrue();
     }
 
+    /// <summary>
+    /// This function attempts to find a valid RSS image file and return it's name, otherwise, just return empty.
+    /// </summary>
+    /// <returns>The RSS image filename.</returns>
     public static string GetRssImageFilename()
     {
         var filename = string.Empty;
 
-        if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")))
-        {
-            filename = "images/rss.png";
-        }
-
-        if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg")))
-        {
-            filename = "images/rss.jpg";
-        }
+        File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png"))
+            .IfTrue(() => filename = "images/rss.png")
+            .IfFalse(() => filename = "images/rss.jpg")
+            .OrElse(() => filename = string.Empty);
 
         return filename;
     }

@@ -443,4 +443,33 @@ public class HtmlGeneratorTests : IDisposable
         }
         return count;
     }
+    
+    [Fact]
+    public void Generate_CopiesNonMarkdownFoldersToOutput()
+    {
+        WriteIndex();
+        Directory.CreateDirectory(Path.Combine(_inputDir, "fonts"));
+        File.WriteAllText(Path.Combine(_inputDir, "fonts", "inter.woff2"), "fake-font");
+        Directory.CreateDirectory(Path.Combine(_inputDir, "images"));
+        File.WriteAllText(Path.Combine(_inputDir, "images", "logo.png"), "fake-png");
+
+        Build().Generate("index.md");
+
+        File.Exists(Path.Combine(_outputDir, "fonts", "inter.woff2")).Should().BeTrue();
+        File.Exists(Path.Combine(_outputDir, "images", "logo.png")).Should().BeTrue();
+   }
+
+   [Fact]
+   public void Generate_DoesNotCopyMarkdownFoldersAsAssets()
+   {
+       WriteIndex();
+       WritePost("News", "post1", "# 2024-01-01 Post\n\nBody.");
+
+       Build(postsTitles: new List<string> { "News" }).Generate("index.md");
+
+       // News/ should be rendered into output/News/*.html, not copied as a raw folder.
+       Directory.Exists(Path.Combine(_outputDir, "News")).Should().BeTrue();
+       File.Exists(Path.Combine(_outputDir, "News", "post1.md")).Should().BeFalse();
+       File.Exists(Path.Combine(_outputDir, "News", "post1.html")).Should().BeTrue();
+   }
 }

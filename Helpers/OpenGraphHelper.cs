@@ -1,128 +1,146 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Markerator.Abstractions;
 
-namespace Markerator.Helpers
+namespace Markerator.Helpers;
+
+/// <summary>
+/// Helpers for constructing <see cref="OpenGraphData"/> instances for the
+/// different page types Markerator generates, and for deriving plain-text
+/// descriptions from markdown content.
+/// </summary>
+public static class OpenGraphHelper
 {
-    public static class OpenGraphHelper
+    /// <summary>
+    /// Builds Open Graph metadata for the site index page.
+    /// </summary>
+    /// <param name="title">The site title.</param>
+    /// <param name="baseUrl">The site base URL.</param>
+    /// <param name="siteName">The site name; falls back to <paramref name="title"/> if null.</param>
+    /// <param name="markdownContent">The index markdown, used to derive a description.</param>
+    /// <returns>The populated <see cref="OpenGraphData"/>.</returns>
+    public static OpenGraphData GenerateForIndex(
+        string title, string baseUrl, string siteName, string markdownContent)
     {
-        public static OpenGraphData GenerateForIndex(
-            string title, string baseUrl, string siteName, string markdownContent)
+        return new OpenGraphData
         {
-            return new OpenGraphData
-            {
-                Title = title,
-                Description = GenerateDescription(markdownContent, 160),
-                ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
-                Url = baseUrl.TrimEnd('/') + "/",
-                Type = "website",
-                SiteName = siteName ?? title
-            };
+            Title = title,
+            Description = GenerateDescription(markdownContent, 160),
+            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
+            Url = baseUrl.TrimEnd('/') + "/",
+            Type = "website",
+            SiteName = siteName ?? title
+        };
+    }
+
+    /// <summary>
+    /// Builds Open Graph metadata for an individual post page. Strips any
+    /// leading <c>YYYY-MM-DD</c> prefix from the title if present.
+    /// </summary>
+    /// <param name="title">The post title, possibly prefixed with a date.</param>
+    /// <param name="baseUrl">The site base URL.</param>
+    /// <param name="siteName">The site name.</param>
+    /// <param name="markdownContent">The post markdown, used to derive a description.</param>
+    /// <param name="postPath">The post's relative output path.</param>
+    /// <returns>The populated <see cref="OpenGraphData"/>.</returns>
+    public static OpenGraphData GenerateForPost(
+        string title, string baseUrl, string siteName,
+        string markdownContent, string postPath)
+    {
+        var cleanTitle = title;
+        var dateMatch = Regex.Match(title, @"^(\d{4}-\d{2}-\d{2})\s+(.+)$");
+        if (dateMatch.Success)
+            cleanTitle = dateMatch.Groups[2].Value.Trim();
+
+        return new OpenGraphData
+        {
+            Title = cleanTitle,
+            Description = GenerateDescription(markdownContent, 160),
+            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
+            Url = $"{baseUrl.TrimEnd('/')}/{postPath.Replace('\\', '/')}",
+            Type = "article",
+            SiteName = siteName ?? cleanTitle
+        };
+    }
+
+    /// <summary>
+    /// Builds Open Graph metadata for a standalone page (About, Contact, etc.).
+    /// </summary>
+    /// <param name="title">The page title.</param>
+    /// <param name="baseUrl">The site base URL.</param>
+    /// <param name="siteName">The site name.</param>
+    /// <param name="markdownContent">The page markdown, used to derive a description.</param>
+    /// <param name="pagePath">The page's relative output path.</param>
+    /// <returns>The populated <see cref="OpenGraphData"/>.</returns>
+    public static OpenGraphData GenerateForPage(
+        string title, string baseUrl, string siteName,
+        string markdownContent, string pagePath)
+    {
+        return new OpenGraphData
+        {
+            Title = title,
+            Description = GenerateDescription(markdownContent, 160),
+            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
+            Url = $"{baseUrl.TrimEnd('/')}/{pagePath.Replace('\\', '/')}",
+            Type = "website",
+            SiteName = siteName ?? title
+        };
+    }
+
+    /// <summary>
+    /// Derives a plain-text description from markdown content for use in
+    /// Open Graph metadata. Strips headings, images, code blocks, inline code,
+    /// and emphasis markers; takes the first sentence if it fits within
+    /// <paramref name="maxLength"/>, otherwise truncates with an ellipsis.
+    /// </summary>
+    /// <param name="markdownContent">The raw markdown content.</param>
+    /// <param name="maxLength">The maximum desired description length.</param>
+    /// <returns>The cleaned, truncated description.</returns>
+    public static string GenerateDescription(string markdownContent, int maxLength)
+    {
+        if (string.IsNullOrEmpty(markdownContent)) return string.Empty;
+
+        var cleanText = markdownContent;
+        cleanText = Regex.Replace(cleanText, @"^#+\s+.*$", "", RegexOptions.Multiline);
+        cleanText = Regex.Replace(cleanText, @"!\[[^\]]*\]\([^\)]+\)", "");
+        cleanText = Regex.Replace(cleanText, @"\[([^\]]+)\]\([^\)]+\)", "$1");
+        cleanText = Regex.Replace(cleanText, @"```[\s\S]*?```", "");
+        cleanText = Regex.Replace(cleanText, @"`[^`]+`", "");
+        cleanText = Regex.Replace(cleanText, @"(\*\*|__|\*|_)", "");
+        cleanText = Regex.Replace(cleanText, @"\s+", " ").Trim();
+
+        if (string.IsNullOrEmpty(cleanText)) return string.Empty;
+
+        var sentences = Regex.Split(cleanText, @"(?<=[.!?])\s+");
+        if (sentences.Length > 0 && sentences[0].Length <= maxLength)
+            return sentences[0];
+
+        if (cleanText.Length <= maxLength) return cleanText;
+
+        return cleanText.Substring(0, maxLength).TrimEnd() + "...";
+    }
+
+    /// <summary>
+    /// Returns the absolute path to the first default Open Graph image found
+    /// under <paramref name="inputDirectory"/>, or <c>null</c> if none exists.
+    /// </summary>
+    /// <param name="inputDirectory">The absolute path to the input directory.</param>
+    /// <returns>The path to the image, or <c>null</c>.</returns>
+    public static string GetDefaultOgImagePath(string inputDirectory)
+    {
+        var possiblePaths = new[]
+        {
+            Path.Combine(inputDirectory, "images", "cardimage.png"),
+            Path.Combine(inputDirectory, "images", "og-image.jpg"),
+            Path.Combine(inputDirectory, "images", "og-image.png"),
+            Path.Combine(inputDirectory, "images", "social.jpg"),
+            Path.Combine(inputDirectory, "images", "social.png")
+        };
+
+        foreach (var path in possiblePaths)
+        {
+            if (File.Exists(path)) return path;
         }
 
-        public static OpenGraphData GenerateForPost(
-            string title, string baseUrl, string siteName,
-            string markdownContent, string postPath)
-        {
-            var cleanTitle = title;
-            var dateMatch = Regex.Match(title, @"^(\d{4}-\d{2}-\d{2})\s+(.+)$");
-            if (dateMatch.Success)
-                cleanTitle = dateMatch.Groups[2].Value.Trim();
-
-            return new OpenGraphData
-            {
-                Title = cleanTitle,
-                Description = GenerateDescription(markdownContent, 160),
-                ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
-                Url = $"{baseUrl.TrimEnd('/')}/{postPath.Replace('\\', '/')}",
-                Type = "article",
-                SiteName = siteName ?? cleanTitle
-            };
-        }
-
-        public static OpenGraphData GenerateForPage(
-            string title, string baseUrl, string siteName,
-            string markdownContent, string pagePath)
-        {
-            return new OpenGraphData
-            {
-                Title = title,
-                Description = GenerateDescription(markdownContent, 160),
-                ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
-                Url = $"{baseUrl.TrimEnd('/')}/{pagePath.Replace('\\', '/')}",
-                Type = "website",
-                SiteName = siteName ?? title
-            };
-        }
-
-        public static string GenerateDescription(string markdownContent, int maxLength)
-        {
-            if (string.IsNullOrEmpty(markdownContent)) return string.Empty;
-
-            // Work line-by-line so we can grab the first real paragraph and stop.
-            var lines = markdownContent.Replace("\r\n", "\n").Split('\n');
-
-            var paragraph = new StringBuilder();
-            bool inCodeFence = false;
-            bool seenHeading = false;
-
-            foreach (var rawLine in lines)
-            {
-                var line = rawLine.TrimEnd();
-
-                // Skip fenced code blocks entirely.
-                if (line.TrimStart().StartsWith("```"))
-                {
-                    inCodeFence = !inCodeFence;
-                    continue;
-                }
-                if (inCodeFence) continue;
-
-                // Skip headings (but note that we've passed one).
-                if (Regex.IsMatch(line, @"^\s*#{1,6}\s"))
-                {
-                    seenHeading = true;
-                    continue;
-                }
-
-                // Blank line ends a paragraph.
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    if (paragraph.Length > 0) break;
-                    continue;
-                }
-
-                // Skip horizontal rules and images-only lines.
-                if (Regex.IsMatch(line, @"^\s*(-{3,}|\*{3,}|_{3,})\s*$")) continue;
-                if (Regex.IsMatch(line, @"^\s*!\[[^\]]*\]\([^\)]+\)\s*$")) continue;
-
-                // Accumulate text into the first paragraph.
-                paragraph.AppendLine(line);
-            }
-
-            var text = paragraph.ToString().Trim();
-            if (string.IsNullOrEmpty(text))
-            {
-                // Fall back: if the whole file is just a heading, use its text.
-                var h1 = Regex.Match(markdownContent, @"^[ \t]*#{1,6}[ \t]+(.+)$", RegexOptions.Multiline);
-                if (h1.Success) text = h1.Groups[1].Value.Trim();
-            }
-            if (string.IsNullOrEmpty(text)) return string.Empty;
-
-            // Clean up inline markdown inside the paragraph.
-            text = Regex.Replace(text, @"!\[[^\]]*\]\([^\)]+\)", "");         // images
-            text = Regex.Replace(text, @"\[([^\]]+)\]\([^\)]+\)", "$1");      // links keep text
-            text = Regex.Replace(text, @"`([^`]+)`", "$1");                    // inline code
-            text = Regex.Replace(text, @"(\*\*|__|\*|_)", "");                 // emphasis
-            text = Regex.Replace(text, @"\s+", " ").Trim();
-
-            if (text.Length <= maxLength) return text;
-
-            // Prefer to end at a sentence boundary near maxLength.
-            var cut = text.LastIndexOfAny(new[] { '.', '!', '?' }, maxLength - 1);
-            if (cut > maxLength / 2) return text.Substring(0, cut + 1);
-
-            return text.Substring(0, maxLength).TrimEnd() + "...";
-        }
+        return string.Empty;
     }
 }

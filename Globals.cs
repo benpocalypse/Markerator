@@ -1,9 +1,19 @@
 ﻿namespace Markerator;
 
+/// <summary>
+/// Global constants and shared content used across Markerator.
+/// </summary>
 public static class Globals
 {
-    public static readonly string Version = "0.7.3";
+    /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
+    public static readonly string Version = "0.8.0";
 
+    /// <summary>
+    /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
+    /// no user-provided CSS is available. Class names must stay in sync with the
+    /// markup emitted by <c>HtmlGenerator.BuildFullHtmlDocument</c> and
+    /// <c>HtmlGenerator.BuildNavigation</c>.
+    /// </summary>
     public static readonly string DefaultCss = @"
 .navigation-title {
     overflow: hidden;

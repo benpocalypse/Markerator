@@ -63,7 +63,7 @@ Below represents the minimum that markerator expects in order to create a valid 
 
 #### Commandline
 ```
-./markerator --title Bengineering --indexFile index.md
+./markerator --title Geocities --indexFile index.md
 ```
 
 ### Site including Posts and a favicon
@@ -80,11 +80,23 @@ Example including a posts section and a favicon.
 
 #### Commandline
 ```
-./markerator --title Bengineering --indexFile index.md --favicon true --posts true
+./markerator --title Geocities --indexFile index.md --favicon true --posts true
 ```
 
 ### A note about Posts
 As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Projects markdown files, there is a new option that can be used. If the entry in your markdown file is of headine H1, and is formatted to contain any valid `DateTime` in it, then Markerator will generate a Posts/News/Blog/Projects page for you that organizes the posts by their given dates. If this H1 section is ommitted, then Markerator will just categorize Posts/News as "All" in that section of the generated site.
+
+For example, if the top of your Posts/News/Blog/Projects entry starts like the following:
+
+```
+# 08/29/1997
+
+## Skynet Sentience
+
+We never knew this day would come, and yet it did. 
+```
+
+This will produce an entry on the overview Posts/News/Blog/Projects page that will sort this entry by date, and provide a header of "Skynet Sentience" With the first line being the "summary" for that entry.
 
 #### Known Bugs
 - [x] ~~At the moment, the Posts/News section is sorted internally by File Creation Time, so even if they contain valid and ordered `DateTime` values, they will still be listed by File Creation Date in the generated Posts/News section. This should be addressed in a following update.~~
@@ -107,20 +119,20 @@ As of the 0.2.5 version of Markerator, if your side includes Posts/News/Blog/Pro
 - [x] Refactor the code to move the Html generation out of markerator.cs
 - [x] Abstract out the "posts" concept to allow any number of links in the navigation that lead to a posts-style page
 - [x] Add Open Graph support to generated pages to allow unfurling of URL's on various social media sites
+- [x] Add user-definable pagination to Posts/News/Updates pages
+- [x] Theme selection - custom CSS files can now be specified as an argument
+- [x] A few sensible included themes - Markerator now ships with Light and Dark variants of the default theme, as well as Light and Dark variants of a Blue theme
+- [x] Advanced Css validation
+- [x] Refactor the code to allow for output directory cleanups, and move the directory code into it's own class
 
 ## Todo
-- [ ] Add user-definable pagination to Posts/News/Updates pages
 - [ ] Update documentation to be more robust and explicit
+- [ ] Add a toggle for light/dark mode to generated sites using only pure HTML/CSS
 - [ ] Create a guide to walk through how to set up Github automation and host a Markerator site on Github
 - [ ] Per page/post Open Graph images, rather than just a single site-wide Open Graph image
-- [ ] Theme selection
-- [ ] A few sensible included themes
 - [ ] Image manipulation for Post Summary (cards)
 - [ ] Better exception/error handling and user feedback
-- [ ] Advanced Css validation
 - [ ] Custom footers  
-- [ ] Refactor the code to allow for output directory cleanups, and move the directory code into it's own class
-
 - [ ] Document the theme Css format to allow users to create new themes
 - [ ] Add more robust error detection and reporting
  
