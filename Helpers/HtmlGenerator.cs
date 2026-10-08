@@ -564,11 +564,11 @@ namespace Markerator.Helpers
         /// <param name="extraHeadTags">Additional markup to inject in the head (e.g. rel links).</param>
         /// <returns>The complete HTML document as a string.</returns>
         private string BuildFullHtmlDocument(
-            string title,
-            string navHtml,
-            string bodyHtml,
-            OpenGraphData ogData,
-            string extraHeadTags)
+        string title,
+        string navHtml,
+        string bodyHtml,
+        OpenGraphData ogData,
+        string extraHeadTags)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<!DOCTYPE html>");
@@ -576,7 +576,7 @@ namespace Markerator.Helpers
             sb.AppendLine("<head>");
             sb.AppendLine("  <meta charset=\"utf-8\" />");
             sb.AppendLine("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
-            sb.AppendLine($"  <title>{WebUtility.HtmlEncode(title)}</title>");
+            sb.AppendLine($"  <title>{System.Net.WebUtility.HtmlEncode(title)}</title>");
 
             var cssHref = string.IsNullOrEmpty(_css)
                 ? "/css/site.css"
@@ -588,7 +588,7 @@ namespace Markerator.Helpers
                 sb.AppendLine("  <link rel=\"icon\" href=\"/images/favicon.ico\" />");
             }
 
-            if (ogData != null)
+            if (ogData != null!)
             {
                 sb.AppendLine(ogData.GenerateMetaTags());
             }
@@ -599,13 +599,28 @@ namespace Markerator.Helpers
             }
 
             sb.AppendLine("</head>");
-            sb.AppendLine("<body>");
-            sb.AppendLine("  <div class=\"navigation-title\">");
-            sb.AppendLine($"    <a href=\"/\">{WebUtility.HtmlEncode(_siteTitle)}</a>");
-            sb.AppendLine("  </div>");
+            sb.AppendLine("<body id=\"theme_default\">");
+
+            // The radio group controls the theme. Both radios share the name "mode", so
+            // only one can be checked at a time. The "checked" attribute on the light
+            // radio is the JS-free default; CSS media queries and user interaction can
+            // override it visually. Because these radios are siblings that precede the
+            // .color-scheme-wrapper, :checked ~ .color-scheme-wrapper can reach it.
+            sb.AppendLine("  <input type=\"radio\" name=\"mode\" id=\"mode_light\" value=\"light\" class=\"mode-input\" checked=\"checked\" />");
+            sb.AppendLine("  <input type=\"radio\" name=\"mode\" id=\"mode_dark\" value=\"dark\" class=\"mode-input\" />");
+
+            sb.AppendLine("  <div class=\"color-scheme-wrapper\">");
+            sb.AppendLine("    <div class=\"navigation-title\">");
+            sb.AppendLine($"      <a href=\"/\">{System.Net.WebUtility.HtmlEncode(_siteTitle)}</a>");
+            sb.AppendLine("      <div class=\"mode-toggle\">");
+            sb.AppendLine("        <label for=\"mode_light\" class=\"mode-label\">light</label>");
+            sb.AppendLine("        <label for=\"mode_dark\" class=\"mode-label\">dark</label>");
+            sb.AppendLine("      </div>");
+            sb.AppendLine("    </div>");
             sb.AppendLine(navHtml);
-            sb.AppendLine("  <div class=\"content\">");
+            sb.AppendLine("    <div class=\"content\">");
             sb.AppendLine(bodyHtml);
+            sb.AppendLine("    </div>");
             sb.AppendLine("  </div>");
             sb.AppendLine("</body>");
             sb.AppendLine("</html>");

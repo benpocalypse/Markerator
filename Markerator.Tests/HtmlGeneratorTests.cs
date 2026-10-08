@@ -472,4 +472,34 @@ public class HtmlGeneratorTests : IDisposable
        File.Exists(Path.Combine(_outputDir, "News", "post1.md")).Should().BeFalse();
        File.Exists(Path.Combine(_outputDir, "News", "post1.html")).Should().BeTrue();
    }
+   
+   [Fact]
+public void Generate_EveryPageHasModeToggleMarkup()
+{
+    WriteIndex();
+    WritePost("News", "post1", "# 2024-01-01 Post\n\nBody.");
+    File.WriteAllText(Path.Combine(_inputDir, "About.md"), "# About\n\nAbout.");
+
+    Build(
+        postsTitles: new List<string> { "News" },
+        otherPages: new List<string> { "About.md" })
+        .Generate("index.md");
+
+    var pages = new[]
+    {
+        Path.Combine(_outputDir, "index.html"),
+        Path.Combine(_outputDir, "News.html"),
+        Path.Combine(_outputDir, "News", "post1.html"),
+        Path.Combine(_outputDir, "About.html")
+    };
+
+    foreach (var page in pages)
+    {
+        var html = File.ReadAllText(page);
+        html.Should().Contain("name=\"mode\"")
+                    .And.Contain("id=\"mode_light\"")
+                    .And.Contain("id=\"mode_dark\"")
+                    .And.Contain("color-scheme-wrapper");
+    }
+}
 }
