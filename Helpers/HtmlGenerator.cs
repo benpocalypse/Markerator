@@ -683,10 +683,11 @@ namespace Markerator.Helpers
         }
 
         /// <summary>
-        /// Extracts a leading <c># YYYY-MM-DD Title</c> header from the markdown, if
-        /// present, returning the parsed date, the title, and the markdown with the
-        /// header line removed. If no dated header is found, the title is derived
-        /// from the first heading, and the markdown is returned unchanged.
+        /// Extracts a leading dated heading from the markdown, if present, returning the
+        /// parsed date, the post title, and the markdown with the heading line removed.
+        /// Supports the <c>YYYY-MM-DD</c> and <c>MM/DD/YYYY</c> date formats. If the
+        /// heading contains only a date and no title, the title is taken from the first
+        /// following H2 heading.
         /// </summary>
         /// <param name="markdown">The raw markdown content of a post.</param>
         /// <returns>
@@ -696,20 +697,77 @@ namespace Markerator.Helpers
         private static (DateTime? date, string title, string cleanMarkdown)
             ExtractAndStripDateHeader(string markdown)
         {
+            if (string.IsNullOrEmpty(markdown))
+                return (null, null, markdown)!;
+
+            // Strip a UTF-8 BOM if present.
+            markdown = markdown.TrimStart('\uFEFF');
+
+            // Match an H1..H6 whose text begins with a date in either YYYY-MM-DD or
+            // MM/DD/YYYY form. The rest of the heading (if any) is captured as the title.
+            //   ^[ \t]*            optional leading whitespace
+            //   #{1,6}             one or more # symbols (heading level)
+            //   [ \t]+             at least one space or tab after the hashes
+            //   ( ... )            capturing group 1: the date
+            //   [ \t]*             optional whitespace between date and title
+            //   (.*?)              capturing group 2: the title (non-greedy)
+            //   [ \t]*$            trailing whitespace, end of line
             var match = Regex.Match(
                 markdown,
-                @"^#\s+(\d{4}-\d{2}-\d{2})\s*(.*)$",
+                @"^[ \t]*#{1,6}[ \t]+(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4})[ \t]*(.*?)[ \t]*$",
                 RegexOptions.Multiline);
 
-            if (match.Success && DateTime.TryParse(match.Groups[1].Value, out var parsedDate))
+            DateTime? parsedDate = null;
+
+            if (match.Success)
+            {
+                var dateString = match.Groups[1].Value;
+
+                // Try the invariant culture parse first — covers both formats above.
+                if (DateTime.TryParse(
+                        dateString,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None,
+                        out var parsed))
+                {
+                    parsedDate = parsed;
+                }
+                else if (DateTime.TryParseExact(
+                             dateString,
+                             new[] { "yyyy-MM-dd", "M/d/yyyy", "MM/dd/yyyy" },
+                             System.Globalization.CultureInfo.InvariantCulture,
+                             System.Globalization.DateTimeStyles.None,
+                             out var exact))
+                {
+                    parsedDate = exact;
+                }
+            }
+
+            if (parsedDate.HasValue)
             {
                 var title = match.Groups[2].Value.Trim();
+
+                // Remove the matched heading line from the body.
                 var cleaned = markdown.Remove(match.Index, match.Length).TrimStart();
+
+                // If the heading contained only a date (no title), look for the next
+                // H2 heading and use its text as the title instead.
+                if (string.IsNullOrWhiteSpace(title))
+                {
+                    var h2 = Regex.Match(
+                        cleaned,
+                        @"^[ \t]*##[ \t]+(.+?)[ \t]*$",
+                        RegexOptions.Multiline);
+
+                    if (h2.Success)
+                        title = h2.Groups[1].Value.Trim();
+                }
+
                 return (parsedDate, title, cleaned);
             }
 
-            // No date header: try to derive a title from an H1 if present.
-            var h1 = Regex.Match(markdown, @"^#\s+(.+)$", RegexOptions.Multiline);
+            // No dated heading found: fall back to the first heading's text as the title.
+            var h1 = Regex.Match(markdown, @"^[ \t]*#{1,6}[ \t]+(.+)$", RegexOptions.Multiline);
             var fallbackTitle = h1.Success ? h1.Groups[1].Value.Trim() : null;
 
             return (null, fallbackTitle, markdown)!;
