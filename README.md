@@ -129,17 +129,18 @@ This will produce an entry on the overview Posts/News/Blog/Projects page that wi
 - [x] A few sensible included themes - Markerator now ships with Light and Dark variants of the default theme, as well as Light and Dark variants of a Blue theme
 - [x] Advanced Css validation
 - [x] Refactor the code to allow for output directory cleanups, and move the directory code into it's own class
+- [x] Add a toggle for light/dark mode to generated sites using only pure HTML/CSS
 
 ## Todo
 - [ ] Update documentation to be more robust and explicit
-- [ ] Add a toggle for light/dark mode to generated sites using only pure HTML/CSS
+	- [ ] Document the theme Css format to allow users to create new
 - [ ] Create a guide to walk through how to set up Github automation and host a Markerator site on Github
 - [ ] Per page/post Open Graph images, rather than just a single site-wide Open Graph image
 - [ ] Image manipulation for Post Summary (cards)
-- [ ] Better exception/error handling and user feedback
+- [ ] Better exception/error handling and user feedback - use StdOut and StdError
+	- [ ] Add more robust error detection and reporting
 - [ ] Custom footers  
-- [ ] Document the theme Css format to allow users to create new themes
-- [ ] Add more robust error detection and reporting
+ themes
  
 # Credits
 Markerator uses a number of very handy nuget packages to do what it does, and for that, I am very thankful. Please help support the authors where you can, as they're doing everyone a great service:
