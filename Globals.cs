@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "0.8.4";
+    public static readonly string Version = "0.8.5";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
@@ -15,8 +15,13 @@ public static class Globals
     /// <c>HtmlGenerator.BuildNavigation</c>.
     /// </summary>
     public static readonly string DefaultCss = @"
-/* ---- Color scheme variables ---- */
+/* ============================================================
+   Default — light/dark with radio-based mode toggle
+   A warm cream light theme with a red accent, and a warm
+   near-black dark variant.
+   ============================================================ */
 
+/* ---- Default (light) ---- */
 .color-scheme-wrapper {
     --bg: #fcf7f0;
     --bg-nav: #fcf7f0;
@@ -29,7 +34,7 @@ public static class Globals
     --accent: #8c2c2c;
     --accent-hover: #000000;
     --accent-contrast: #fcf7f0;
-    --border: #ccc;
+    --border: #cccccc;
     --border-subtle: #eeeeee;
     --shadow: rgba(0, 0, 0, 0.2);
 
@@ -38,6 +43,7 @@ public static class Globals
     color: var(--text);
 }
 
+/* ---- System prefers dark: default becomes dark ---- */
 @media (prefers-color-scheme: dark) {
     .color-scheme-wrapper {
         --bg: #1a1614;
@@ -57,7 +63,8 @@ public static class Globals
     }
 }
 
-#color-mode:checked ~ .color-scheme-wrapper {
+/* ---- User explicitly picked dark ---- */
+#mode_dark:checked ~ .color-scheme-wrapper {
     --bg: #1a1614;
     --bg-nav: #1a1614;
     --bg-dropdown: #241f1c;
@@ -74,43 +81,43 @@ public static class Globals
     --shadow: rgba(0, 0, 0, 0.6);
 }
 
-@media (prefers-color-scheme: dark) {
-    #color-mode:checked ~ .color-scheme-wrapper {
-        --bg: #fcf7f0;
-        --bg-nav: #fcf7f0;
-        --bg-dropdown: #f1f1f1;
-        --bg-dropdown-hover: #ddd;
-        --text: #5e5e5e;
-        --text-heading: #5e5e5e;
-        --text-footer: #5e5e5e;
-        --text-disabled: #aaa;
-        --accent: #8c2c2c;
-        --accent-hover: #000000;
-        --accent-contrast: #fcf7f0;
-        --border: #ccc;
-        --border-subtle: #eeeeee;
-        --shadow: rgba(0, 0, 0, 0.2);
-    }
+/* ---- User explicitly picked light, overriding a dark system preference ---- */
+#mode_light:checked ~ .color-scheme-wrapper {
+    --bg: #fcf7f0;
+    --bg-nav: #fcf7f0;
+    --bg-dropdown: #f1f1f1;
+    --bg-dropdown-hover: #ddd;
+    --text: #5e5e5e;
+    --text-heading: #5e5e5e;
+    --text-footer: #5e5e5e;
+    --text-disabled: #aaa;
+    --accent: #8c2c2c;
+    --accent-hover: #000000;
+    --accent-contrast: #fcf7f0;
+    --border: #cccccc;
+    --border-subtle: #eeeeee;
+    --shadow: rgba(0, 0, 0, 0.2);
 }
 
-/* ---- Structure ---- */
+/* ---- Structural rules ---- */
 
 .navigation-title {
     overflow: hidden;
     position: fixed;
-    top: 0px;
-    margin-left: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 35px;
     padding-left: 40%;
-    width: 100%;
+    padding-right: 16px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     background-color: var(--bg-nav);
 }
 
 .navigation-title a {
-    float: left;
     color: var(--accent);
-    text-align: center;
-    padding: 10px 16px;
     text-decoration: none;
     font-size: 22px;
 }
@@ -119,9 +126,10 @@ public static class Globals
     overflow: hidden;
     position: fixed;
     top: 35px;
+    left: 0;
+    right: 0;
     margin-left: 0;
     padding-left: 40%;
-    width: 100%;
     align-items: center;
     background-color: var(--bg-nav);
 }
@@ -138,6 +146,50 @@ public static class Globals
 .navigation a:hover {
     color: var(--accent-hover);
 }
+
+/* ---- Toggle ---- */
+
+.mode-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 4px;
+}
+
+.mode-label {
+    cursor: pointer;
+    padding: 6px 12px;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 14px;
+    user-select: none;
+}
+
+.mode-label:hover {
+    color: var(--accent-hover);
+    border-color: var(--accent);
+}
+
+/* Highlight the active mode's label. */
+#mode_light:checked ~ .color-scheme-wrapper label[for=""mode_light""],
+#mode_dark:checked ~ .color-scheme-wrapper label[for=""mode_dark""] {
+    background-color: var(--accent);
+    color: var(--accent-contrast);
+    border-color: var(--accent);
+}
+
+/* ---- Content, tables, dropdowns ---- */
 
 table, th, td {
     border: 0px solid var(--border-subtle);
@@ -211,28 +263,62 @@ th, td {
     color: var(--accent-hover);
 }
 
-/* ---- Color-mode toggle ---- */
+/* ---- Pagination ---- */
 
-.color-mode-toggle {
-    display: none;
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2rem 0;
+    font-size: 0.95rem;
 }
 
-.color-mode-label {
-    float: right;
-    margin-right: 16px;
-    margin-top: 12px;
-    padding: 6px 12px;
-    cursor: pointer;
-    color: var(--accent);
-    background-color: transparent;
+.pagination-pages {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination-current,
+.pagination-prev,
+.pagination-next {
+    padding: 0.4rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: 4px;
-    font-size: 14px;
-    user-select: none;
+    text-decoration: none;
+    color: var(--accent);
 }
 
-.color-mode-label:hover {
-    color: var(--accent-hover);
+.pagination-current {
+    background: var(--accent);
+    color: var(--accent-contrast);
     border-color: var(--accent);
-";
+    font-weight: bold;
+}
+
+.pagination .disabled {
+    color: var(--text-disabled);
+    border-color: var(--border-subtle);
+    cursor: not-allowed;
+}
+
+/* ---- Headings, body, footer ---- */
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-heading);
+}
+
+body {
+    margin-left: 0;
+    padding-top: 0;
+}
+
+footer {
+    text-align: center;
+    padding: 6px;
+    background-color: var(--bg-nav);
+    color: var(--text-footer);
+    font-size: 12px;
+}";
 }
