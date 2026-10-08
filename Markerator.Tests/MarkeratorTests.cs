@@ -61,12 +61,11 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "index.html")).Should().BeTrue();
@@ -85,7 +84,7 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
+            var exit = Markerator.Program.Main(new[]
             {
                 "-t", "Test Site",
                 "-u", "https://example.com",
@@ -113,15 +112,14 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true",
                 "-pt", "News",
                 "-pp", "10"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.html")).Should().BeTrue();
@@ -142,15 +140,14 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true",
                 "-pt", "News",
                 "-rss", "true"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.xml")).Should().BeTrue();
@@ -169,14 +166,13 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true",
                 "-pt", "News,Blog"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.html")).Should().BeTrue();
@@ -195,13 +191,12 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-op", "About.md"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "About.html")).Should().BeTrue();
@@ -219,13 +214,12 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.html")).Should().BeTrue();
@@ -245,14 +239,13 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true",
                 "-pt", "News, Blog; Updates"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.html")).Should().BeTrue();
@@ -270,12 +263,11 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com/",
                 "-i", "index.md"
-            });
+            ]);
 
             exit.Should().Be(0);
 
@@ -298,12 +290,11 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md"
-            });
+            ]);
 
             exit.Should().NotBe(0);
         }
@@ -319,12 +310,11 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md"
-            });
+            ]);
 
             exit.Should().NotBe(0);
         }
@@ -346,14 +336,13 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true",
                 "-pt", "News"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.html")).Should().BeTrue();
@@ -373,15 +362,14 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md",
                 "-p", "true",
                 "-pt", "News",
                 "-pp", "0"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "News.html")).Should().BeTrue();
@@ -398,12 +386,11 @@ public class ProgramTests
         {
             Directory.SetCurrentDirectory(_root);
 
-            var exit = Markerator.Main(new[]
-            {
+            var exit = Markerator.Program.Main([
                 "-t", "Test Site",
                 "-u", "https://example.com",
                 "-i", "index.md"
-            });
+            ]);
 
             exit.Should().Be(0);
             File.Exists(Path.Combine(_outputDir, "index.html")).Should().BeTrue();

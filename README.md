@@ -3,11 +3,16 @@ A very simple static website generator written in C#/.Net. I created this mainly
 
 ![Markerator Logo](docs/images/markerator_logo_small.png)
 
+## Interim Icon
+I've asked a very talented artist to create a good icon for Markerator that complies with the Gnome HIG/style, but in the meantime, I've come up with this as a placeholder.
+![Markerator Icon](Icon.png)
+
+
 # Simple
 Although it seems to be a necessary evil nowadays, I tend to detest javascript use in web pages. That being said, the sites generated using Markerator will use no/minimal javascript, and will offer no tracking or analytics features built-in. If that's what you need in a static site generator, feel free to fork this repo and add those things yourself - I'll never include them by default.
 
 # Platforms
-Any platform that .NET 5 or newer supports.
+Any platform that .NET 8 or newer supports.
 
 ## Usage
 ```
@@ -45,7 +50,7 @@ A very simple static website generator written in C#/.Net
                  values can be used by joining them with any of the following 
                  separators: , ;
 -c|--css         Optional with default ''. Inlude a custom CSS file that will 
-                 theme the generated site. Examples: LightTheme.css, 
+                 theme the generated site. Examples: Blue.css, 
                  DarkTheme.css 
 -pp|--postsPerPage Optional with default 0. This will tell Markerator how many posts should appear on the News/Updates/Blogs landing page. Specifying 0 will mean there is no limit, specifying any other number will create a series of pages that are linked to each other for pagination.
 ```

@@ -25,7 +25,7 @@ public static class OpenGraphHelper
         {
             Title = title,
             Description = GenerateDescription(markdownContent, 160),
-            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
+            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/og-image.png",
             Url = baseUrl.TrimEnd('/') + "/",
             Type = "website",
             SiteName = siteName ?? title
@@ -55,7 +55,7 @@ public static class OpenGraphHelper
         {
             Title = cleanTitle,
             Description = GenerateDescription(markdownContent, 160),
-            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
+            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/og-image.png",
             Url = $"{baseUrl.TrimEnd('/')}/{postPath.Replace('\\', '/')}",
             Type = "article",
             SiteName = siteName ?? cleanTitle
@@ -79,7 +79,7 @@ public static class OpenGraphHelper
         {
             Title = title,
             Description = GenerateDescription(markdownContent, 160),
-            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/cardimage.png",
+            ImageUrl = $"{baseUrl.TrimEnd('/')}/images/og-image.png",
             Url = $"{baseUrl.TrimEnd('/')}/{pagePath.Replace('\\', '/')}",
             Type = "website",
             SiteName = siteName ?? title

@@ -726,7 +726,7 @@ namespace Markerator.Helpers
                 }
             }
 
-            return $"{_baseUrl}/images/cardimage.png";
+            return $"{_baseUrl}/images/og-image.png";
         }
 
         /// <summary>
