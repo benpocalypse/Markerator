@@ -184,72 +184,88 @@ namespace Markerator.Helpers
         /// Nested directory structure is preserved.
         /// </summary>
         private void CopyAssetFolders()
+{
+    // Folders whose contents are already handled by WriteCssFile.
+    var excludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "css",
+        "Themes"
+    };
+
+    var topLevelDirs = Directory.GetDirectories(_inputDir, "*", SearchOption.TopDirectoryOnly);
+    if (topLevelDirs.Length == 0)
+    {
+        Console.WriteLine("No input subfolders found; skipping asset copy.");
+        return;
+    }
+
+    Console.WriteLine("------------------------------------------------------------");
+    Console.WriteLine("Copying asset folders");
+    Console.WriteLine($"  Source:      {_inputDir}");
+    Console.WriteLine($"  Destination: {_outputDir}");
+
+    int foldersCopied = 0;
+    int filesCopied = 0;
+
+    foreach (var sourceDir in topLevelDirs)
+    {
+        var folderName = Path.GetFileName(sourceDir);
+
+        // Skip hidden/dot directories like .git, .github, .vscode.
+        // These are tooling metadata and never belong in the generated site.
+        if (folderName.StartsWith("."))
         {
-            // Folders whose contents are already handled by WriteCssFile.
-            var excludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                "css",
-                "Themes"
-            };
-
-            var topLevelDirs = Directory.GetDirectories(_inputDir, "*", SearchOption.TopDirectoryOnly);
-            if (topLevelDirs.Length == 0)
-            {
-                Console.WriteLine("No input subfolders found; skipping asset copy.");
-                return;
-            }
-
-            Console.WriteLine("------------------------------------------------------------");
-            Console.WriteLine("Copying asset folders");
-            Console.WriteLine($"  Source:      {_inputDir}");
-            Console.WriteLine($"  Destination: {_outputDir}");
-
-            int foldersCopied = 0;
-            int filesCopied = 0;
-
-            foreach (var sourceDir in topLevelDirs)
-            {
-                var folderName = Path.GetFileName(sourceDir);
-
-                if (excludedFolders.Contains(folderName))
-                {
-                    Console.WriteLine($"    Skipped: {folderName}/ (handled by WriteCssFile)");
-                    continue;
-                }
-
-                var markdownFiles = Directory.GetFiles(sourceDir, "*.md", SearchOption.AllDirectories);
-                if (markdownFiles.Length > 0)
-                {
-                    Console.WriteLine($"    Skipped: {folderName}/ (contains {markdownFiles.Length} markdown file(s))");
-                    continue;
-                }
-
-                var destDir = Path.Combine(_outputDir, folderName);
-                Directory.CreateDirectory(destDir);
-
-                var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
-                foreach (var sourceFile in files)
-                {
-                    var relative = Path.GetRelativePath(sourceDir, sourceFile);
-                    var destFile = Path.Combine(destDir, relative);
-
-                    var destFileDir = Path.GetDirectoryName(destFile);
-                    if (!string.IsNullOrEmpty(destFileDir))
-                    {
-                        Directory.CreateDirectory(destFileDir);
-                    }
-
-                    File.Copy(sourceFile, destFile, overwrite: true);
-                    filesCopied++;
-                }
-
-                Console.WriteLine($"    Copied: {folderName}/ ({files.Length} file(s))");
-                foldersCopied++;
-            }
-
-            Console.WriteLine($"  Copied {foldersCopied} folder(s) / {filesCopied} file(s).");
-            Console.WriteLine("------------------------------------------------------------");
+            Console.WriteLine($"    Skipped: {folderName}/ (hidden directory)");
+            continue;
         }
+
+        if (excludedFolders.Contains(folderName))
+        {
+            Console.WriteLine($"    Skipped: {folderName}/ (handled by WriteCssFile)");
+            continue;
+        }
+
+        var markdownFiles = Directory.GetFiles(sourceDir, "*.md", SearchOption.AllDirectories);
+        if (markdownFiles.Length > 0)
+        {
+            Console.WriteLine($"    Skipped: {folderName}/ (contains {markdownFiles.Length} markdown file(s))");
+            continue;
+        }
+
+        var destDir = Path.Combine(_outputDir, folderName);
+        Directory.CreateDirectory(destDir);
+
+        var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
+        foreach (var sourceFile in files)
+        {
+            // Also skip anything inside a hidden subdirectory (e.g. a nested
+            // .git inside a copied folder).
+            var relative = Path.GetRelativePath(sourceDir, sourceFile);
+            if (relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        .Any(segment => segment.StartsWith(".")))
+            {
+                continue;
+            }
+
+            var destFile = Path.Combine(destDir, relative);
+
+            var destFileDir = Path.GetDirectoryName(destFile);
+            if (!string.IsNullOrEmpty(destFileDir))
+            {
+                Directory.CreateDirectory(destFileDir);
+            }
+
+            File.Copy(sourceFile, destFile, overwrite: true);
+            filesCopied++;
+        }
+
+        Console.WriteLine($"    Copied: {folderName}/ ({files.Length} file(s))");
+        foldersCopied++;
+    }
+
+    Console.WriteLine($"  Copied {foldersCopied} folder(s) / {filesCopied} file(s).");
+    Console.WriteLine("------------------------------------------------------------");
+}
 
         /// <summary>
         /// Builds the navigation HTML from the configured post sections and extra pages.
