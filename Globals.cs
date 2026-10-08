@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "0.8.5";
+    public static readonly string Version = "0.8.6";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
@@ -97,6 +97,108 @@ public static class Globals
     --border: #cccccc;
     --border-subtle: #eeeeee;
     --shadow: rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+   Responsive tables
+   ------------------------------------------------------------
+   On wide viewports, tables render normally inside a scrollable
+   wrapper. On narrow viewports (below 700px), the table stacks
+   into a card layout, with each cell showing its column header
+   via the data-label attribute injected by TableHelper.
+   ============================================================ */
+
+.table-wrapper {
+    overflow-x: auto;
+    margin: 1.5em 0;
+    /* Prevent the wrapper from causing horizontal page scroll on wide tables. */
+    max-width: 100%;
+}
+
+.table-wrapper table {
+    /* By default, let the table fill the wrapper. If the content is
+       wider than the viewport, the wrapper scrolls. */
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Base table styling: headers and cells get padding and borders
+   consistent with the rest of the site. */
+.table-wrapper th,
+.table-wrapper td {
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.table-wrapper th {
+    color: var(--text-heading);
+    font-weight: bold;
+    border-bottom: 2px solid var(--border);
+}
+
+/* --------------------------------------------------------------------
+   Narrow viewports: stack the table into cards, one per row.
+   Each cell shows its column label from the data-label attribute.
+   -------------------------------------------------------------------- */
+
+@media (max-width: 700px) {
+    .table-wrapper table,
+    .table-wrapper thead,
+    .table-wrapper tbody,
+    .table-wrapper th,
+    .table-wrapper td,
+    .table-wrapper tr {
+        display: block;
+        width: 100%;
+    }
+
+    /* Hide the header row; each cell shows its own label instead. */
+    .table-wrapper thead {
+        display: none;
+    }
+
+    /* Each row becomes a card. */
+    .table-wrapper tr {
+        margin-bottom: 1em;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        background-color: var(--bg-dropdown);
+    }
+
+    /* Each cell becomes a labeled block. */
+    .table-wrapper td {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1em;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-subtle);
+        text-align: right;
+    }
+
+    .table-wrapper td:last-child {
+        border-bottom: none;
+    }
+
+    /* The data-label is rendered as a pseudo-element on the left. */
+    .table-wrapper td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: var(--text-heading);
+        text-align: left;
+        flex: 0 0 auto;
+        max-width: 40%;
+    }
+
+    /* Cells without a data-label (e.g. extra cells beyond the header
+       count) render as plain blocks. */
+    .table-wrapper td:not([data-label])::before {
+        content: """";
+        display: none;
+    }
 }
 
 /* ---- Structural rules ---- */

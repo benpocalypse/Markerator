@@ -174,6 +174,17 @@ namespace Markerator.Helpers
             File.WriteAllText(defaultDest, Globals.DefaultCss);
             Console.WriteLine($"Wrote built-in default stylesheet -> {defaultDest}");
         }
+        
+        /// <summary>
+        /// This function is responsible for making any page that contains tables mobile responsive.
+        /// </summary>
+        /// <param name="markdown">The pages complete Markdown</param>
+        /// <returns>The updated, responsive Markdown</returns>
+        private string RenderMarkdown(string markdown)
+        {
+            var html = Markdown.ToHtml(markdown, _markdownPipeline);
+            return TableHelper.MakeTablesResponsive(html);
+        }
 
         /// <summary>
         /// Copies every folder under <c>input/</c> that does not contain markdown files
@@ -184,88 +195,88 @@ namespace Markerator.Helpers
         /// Nested directory structure is preserved.
         /// </summary>
         private void CopyAssetFolders()
-{
-    // Folders whose contents are already handled by WriteCssFile.
-    var excludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
-        "css",
-        "Themes"
-    };
-
-    var topLevelDirs = Directory.GetDirectories(_inputDir, "*", SearchOption.TopDirectoryOnly);
-    if (topLevelDirs.Length == 0)
-    {
-        Console.WriteLine("No input subfolders found; skipping asset copy.");
-        return;
-    }
-
-    Console.WriteLine("------------------------------------------------------------");
-    Console.WriteLine("Copying asset folders");
-    Console.WriteLine($"  Source:      {_inputDir}");
-    Console.WriteLine($"  Destination: {_outputDir}");
-
-    int foldersCopied = 0;
-    int filesCopied = 0;
-
-    foreach (var sourceDir in topLevelDirs)
-    {
-        var folderName = Path.GetFileName(sourceDir);
-
-        // Skip hidden/dot directories like .git, .github, .vscode.
-        // These are tooling metadata and never belong in the generated site.
-        if (folderName.StartsWith("."))
         {
-            Console.WriteLine($"    Skipped: {folderName}/ (hidden directory)");
-            continue;
-        }
-
-        if (excludedFolders.Contains(folderName))
-        {
-            Console.WriteLine($"    Skipped: {folderName}/ (handled by WriteCssFile)");
-            continue;
-        }
-
-        var markdownFiles = Directory.GetFiles(sourceDir, "*.md", SearchOption.AllDirectories);
-        if (markdownFiles.Length > 0)
-        {
-            Console.WriteLine($"    Skipped: {folderName}/ (contains {markdownFiles.Length} markdown file(s))");
-            continue;
-        }
-
-        var destDir = Path.Combine(_outputDir, folderName);
-        Directory.CreateDirectory(destDir);
-
-        var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
-        foreach (var sourceFile in files)
-        {
-            // Also skip anything inside a hidden subdirectory (e.g. a nested
-            // .git inside a copied folder).
-            var relative = Path.GetRelativePath(sourceDir, sourceFile);
-            if (relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                        .Any(segment => segment.StartsWith(".")))
+            // Folders whose contents are already handled by WriteCssFile.
+            var excludedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                continue;
+                "css",
+                "Themes"
+            };
+
+            var topLevelDirs = Directory.GetDirectories(_inputDir, "*", SearchOption.TopDirectoryOnly);
+            if (topLevelDirs.Length == 0)
+            {
+                Console.WriteLine("No input subfolders found; skipping asset copy.");
+                return;
             }
 
-            var destFile = Path.Combine(destDir, relative);
+            Console.WriteLine("------------------------------------------------------------");
+            Console.WriteLine("Copying asset folders");
+            Console.WriteLine($"  Source:      {_inputDir}");
+            Console.WriteLine($"  Destination: {_outputDir}");
 
-            var destFileDir = Path.GetDirectoryName(destFile);
-            if (!string.IsNullOrEmpty(destFileDir))
+            int foldersCopied = 0;
+            int filesCopied = 0;
+
+            foreach (var sourceDir in topLevelDirs)
             {
-                Directory.CreateDirectory(destFileDir);
+                var folderName = Path.GetFileName(sourceDir);
+
+                // Skip hidden/dot directories like .git, .github, .vscode.
+                // These are tooling metadata and never belong in the generated site.
+                if (folderName.StartsWith("."))
+                {
+                    Console.WriteLine($"    Skipped: {folderName}/ (hidden directory)");
+                    continue;
+                }
+
+                if (excludedFolders.Contains(folderName))
+                {
+                    Console.WriteLine($"    Skipped: {folderName}/ (handled by WriteCssFile)");
+                    continue;
+                }
+
+                var markdownFiles = Directory.GetFiles(sourceDir, "*.md", SearchOption.AllDirectories);
+                if (markdownFiles.Length > 0)
+                {
+                    Console.WriteLine($"    Skipped: {folderName}/ (contains {markdownFiles.Length} markdown file(s))");
+                    continue;
+                }
+
+                var destDir = Path.Combine(_outputDir, folderName);
+                Directory.CreateDirectory(destDir);
+
+                var files = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
+                foreach (var sourceFile in files)
+                {
+                    // Also skip anything inside a hidden subdirectory (e.g. a nested
+                    // .git inside a copied folder).
+                    var relative = Path.GetRelativePath(sourceDir, sourceFile);
+                    if (relative.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                                .Any(segment => segment.StartsWith(".")))
+                    {
+                        continue;
+                    }
+
+                    var destFile = Path.Combine(destDir, relative);
+
+                    var destFileDir = Path.GetDirectoryName(destFile);
+                    if (!string.IsNullOrEmpty(destFileDir))
+                    {
+                        Directory.CreateDirectory(destFileDir);
+                    }
+
+                    File.Copy(sourceFile, destFile, overwrite: true);
+                    filesCopied++;
+                }
+
+                Console.WriteLine($"    Copied: {folderName}/ ({files.Length} file(s))");
+                foldersCopied++;
             }
 
-            File.Copy(sourceFile, destFile, overwrite: true);
-            filesCopied++;
+            Console.WriteLine($"  Copied {foldersCopied} folder(s) / {filesCopied} file(s).");
+            Console.WriteLine("------------------------------------------------------------");
         }
-
-        Console.WriteLine($"    Copied: {folderName}/ ({files.Length} file(s))");
-        foldersCopied++;
-    }
-
-    Console.WriteLine($"  Copied {foldersCopied} folder(s) / {filesCopied} file(s).");
-    Console.WriteLine("------------------------------------------------------------");
-}
 
         /// <summary>
         /// Builds the navigation HTML from the configured post sections and extra pages.
@@ -309,7 +320,7 @@ namespace Markerator.Helpers
             }
 
             var rawMarkdown = File.ReadAllText(indexPath);
-            var bodyHtml = Markdown.ToHtml(rawMarkdown, _markdownPipeline);
+            var bodyHtml = RenderMarkdown(rawMarkdown);
 
             var description = OpenGraphHelper.GenerateDescription(rawMarkdown, 160);
 
@@ -363,7 +374,7 @@ namespace Markerator.Helpers
             {
                 var raw = File.ReadAllText(file);
                 var (date, parsedTitle, cleanMarkdown) = ExtractAndStripDateHeader(raw);
-                var htmlContent = Markdown.ToHtml(cleanMarkdown, _markdownPipeline);
+                var htmlContent = RenderMarkdown(cleanMarkdown);
                 var fileName = Path.GetFileNameWithoutExtension(file);
 
                 var derivedTitle = string.IsNullOrWhiteSpace(parsedTitle) ? fileName : parsedTitle;
@@ -542,7 +553,7 @@ namespace Markerator.Helpers
             }
 
             var rawMarkdown = File.ReadAllText(path);
-            var bodyHtml = Markdown.ToHtml(rawMarkdown, _markdownPipeline);
+            var bodyHtml = RenderMarkdown(rawMarkdown);
             var name = Path.GetFileNameWithoutExtension(mdFileName);
 
             var ogData = new OpenGraphData
