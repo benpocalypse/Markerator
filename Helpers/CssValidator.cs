@@ -38,8 +38,11 @@ public static class CssValidator
                     !rule.SelectorText.Contains("body") &&
                     !rule.SelectorText.Contains("h"))
                 {
-                    Console.WriteLine("Returning default Css.");
-                    throw new Exception($"Failed to parse {cssFilenames}.");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("WARNING: Returning default Css.");
+                    Console.ResetColor();
+                    
+                    return Result.Fail("Failed to either find or correctly parse supplied CSS").ToString();
                 }
             }
 

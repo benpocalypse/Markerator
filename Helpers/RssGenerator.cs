@@ -58,7 +58,12 @@ public static class RssGenerator
         (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.png")) ||
          File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "output", "images/rss.jpg")))
             .IfTrue(() => Console.WriteLine("Successfully found the RSS image."))
-            .OrElse(() => Console.WriteLine("Failed to find either rss.png or rss.jpg."));
+            .OrElse(() =>
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("ERROR: Failed to find either rss.png or rss.jpg.");
+                Console.ResetColor();
+            });
 
         return
             (

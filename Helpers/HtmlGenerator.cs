@@ -154,9 +154,11 @@ namespace Markerator.Helpers
                     return;
                 }
 
+                Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(
-                    $"Warning: CSS file '{_css}' was specified but could not be located in " +
+                    $"WARNING: CSS file '{_css}' was specified but could not be located in " +
                     $"input/ or input/css/. Falling back to the default stylesheet.");
+                Console.ResetColor();
             }
 
             // 2. No CSS specified (or the requested one wasn't found): try input/css/site.css.
@@ -316,7 +318,7 @@ namespace Markerator.Helpers
             var indexPath = Path.Combine(_inputDir, indexFile);
             if (!File.Exists(indexPath))
             {
-                return Result.Fail(new Error($"Index file not found: {indexPath}"));
+                return Result.Fail(new Error($"ERROR: Index file not found: {indexPath}"));
             }
 
             var rawMarkdown = File.ReadAllText(indexPath);
@@ -362,7 +364,10 @@ namespace Markerator.Helpers
             var sectionInput = Path.Combine(_inputDir, sectionName);
             if (!Directory.Exists(sectionInput))
             {
-                Console.WriteLine($"Warning: no folder for section '{sectionName}' at {sectionInput}. Skipping.");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"ERROR: No folder for section '{sectionName}' at {sectionInput}. Skipping.");
+                Console.ResetColor();
+                
                 return Result.Ok();
             }
 

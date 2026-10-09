@@ -5,14 +5,17 @@ A very simple static website generator written in C#/.Net. I created this mainly
 
 ## Interim Icon
 I've asked a very talented artist to create a good icon for Markerator that complies with the Gnome HIG/style, but in the meantime, I've come up with this as a placeholder.
+
+<p style="text-align: center;">
 ![Markerator Icon](Icon.png)
+</p>
 
 
 # Simple
 Although it seems to be a necessary evil nowadays, I tend to detest javascript use in web pages. That being said, the sites generated using Markerator will use no/minimal javascript, and will offer no tracking or analytics features built-in. If that's what you need in a static site generator, feel free to fork this repo and add those things yourself - I'll never include them by default.
 
 # Platforms
-Any platform that .NET 8 or newer supports.
+Any platform that .NET 5 or newer supports.
 
 ## Usage
 ```
@@ -60,6 +63,7 @@ In order for Markerator to correctly process your markdown input files, it expec
 
 ### Minimal Site
 Below represents the minimum that markerator expects in order to create a valid Html website.
+
 #### Folder Layout
 ```
 /input/index.md
@@ -103,8 +107,15 @@ We never knew this day would come, and yet it did.
 
 This will produce an entry on the overview Posts/News/Blog/Projects page that will sort this entry by date, and provide a header of "Skynet Sentience" With the first line being the "summary" for that entry.
 
+#### CSS File Documentation
+The specific format for a custom CSS file that Markerator can use to style your site is documented here: [CSS File Format](docs/CssFormat.md) 
+
+Although this intended to be a stable document when v1.0.0 is released, there may be breaking changes in the future. If that is the case, it will be made obvious in this Readme file, and the historical CSS Format that goes with each previous version will remain active and noted here.
+
+
 #### Known Bugs
 - [x] ~~At the moment, the Posts/News section is sorted internally by File Creation Time, so even if they contain valid and ordered `DateTime` values, they will still be listed by File Creation Date in the generated Posts/News section. This should be addressed in a following update.~~
+- [ ] An attempt was made using CSS and HTML to make the Markerator generated sites responsive for mobile use. However, there is a bug that makes pages that use Markdown Tables behave oddly. This is being looked into and will be addressed in a future Markerator release, and noted here. For now, the CSS Format Documentation will just omit this feature.
 
 ## Features
 - [x] Markdown input processing (via Markdig)
@@ -126,19 +137,18 @@ This will produce an entry on the overview Posts/News/Blog/Projects page that wi
 - [x] Add Open Graph support to generated pages to allow unfurling of URL's on various social media sites
 - [x] Add user-definable pagination to Posts/News/Updates pages
 - [x] Theme selection - custom CSS files can now be specified as an argument
-- [x] A few sensible included themes - Markerator now ships with Light and Dark variants of the default theme, as well as Light and Dark variants of a Blue theme
-- [x] Advanced Css validation
+- [x] A few sensible included themes - Markerator now ships with Light and Dark variants of the default theme, as well as Light and Dark variants of a Blue theme, and 2 more additional themes.
+- [x] Advanced CSS validation
 - [x] Refactor the code to allow for output directory cleanups, and move the directory code into it's own class
 - [x] Add a toggle for light/dark mode to generated sites using only pure HTML/CSS
+- [x] Better exception/error handling and user feedback - use StdOut and StdError
+- [x] Document the theme CSS File Fformat to allow users to create new themes for Markerator
 
 ## Todo
 - [ ] Update documentation to be more robust and explicit
-	- [ ] Document the theme Css format to allow users to create new
 - [ ] Create a guide to walk through how to set up Github automation and host a Markerator site on Github
 - [ ] Per page/post Open Graph images, rather than just a single site-wide Open Graph image
 - [ ] Image manipulation for Post Summary (cards)
-- [ ] Better exception/error handling and user feedback - use StdOut and StdError
-	- [ ] Add more robust error detection and reporting
 - [ ] Custom footers  
  themes
  

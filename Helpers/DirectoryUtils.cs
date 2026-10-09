@@ -17,7 +17,7 @@ public static class DirectoryUtils
     /// </summary>
     public static void CreateOutputDirectories()
     {
-        // TODO: Spit out a message about what the actual proper directory structure for input should look like.
+        // TODO: Spit out a message about what the actual proper directory structure for input should look like, maybe?
         Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "output"));
 
         Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "input", "images"))
@@ -46,7 +46,6 @@ public static class DirectoryUtils
         foreach (FileInfo fi in source.GetFiles())
         {
             Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
-            fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
         }
 
         foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())

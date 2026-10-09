@@ -119,7 +119,9 @@ namespace Markerator
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Fatal: {ex.Message}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"ERROR:{ex.Message}");
+                Console.ResetColor();
                 return 1;
             }
         }
@@ -162,7 +164,10 @@ namespace Markerator
 
             if (!Directory.Exists(inputDir))
             {
-                Console.Error.WriteLine($"Error: input directory not found at {inputDir}");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"ERROR: input directory not found at {inputDir}");
+                Console.ResetColor();
+                
                 return 1;
             }
 
@@ -194,7 +199,9 @@ namespace Markerator
             {
                 foreach (var err in result.Errors)
                 {
-                    Console.Error.WriteLine($"Error: {err.Message}");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Error.WriteLine($"{err.Message}");
+                    Console.ResetColor();
                 }
                 return 1;
             }
