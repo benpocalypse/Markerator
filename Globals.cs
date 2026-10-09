@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "0.8.8";
+    public static readonly string Version = "0.8.9";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
@@ -95,7 +95,7 @@ public static class Globals
 }
 
 /* ============================================================
-   Tables — all rules scoped to .table-wrapper
+   Tables
    ============================================================ */
 
 .table-wrapper {
@@ -109,7 +109,6 @@ public static class Globals
     border-collapse: collapse;
 }
 
-/* Base (desktop) table styling. */
 .table-wrapper th,
 .table-wrapper td {
     padding: 10px 14px;
@@ -125,8 +124,6 @@ public static class Globals
     border-bottom: 2px solid var(--border);
 }
 
-/* Images inside table cells: keep them from overflowing on narrow
-   viewports, and align them neatly inside the cell. */
 .table-wrapper th img,
 .table-wrapper td img {
     max-width: 100%;
@@ -135,20 +132,29 @@ public static class Globals
     vertical-align: middle;
 }
 
-/* Mobile: stack the table into cards, one per row. */
+/* ---- Mobile: stack the table into cards ---- */
 @media (max-width: 700px) {
     .table-wrapper table,
-    .table-wrapper thead,
     .table-wrapper tbody,
     .table-wrapper tr,
-    .table-wrapper th,
     .table-wrapper td {
         display: block;
         width: 100%;
     }
 
-    .table-wrapper thead {
-        display: none;
+    /* Hide the header row and everything inside it. Using !important to
+       defeat any cascade interference, and redundant display/visibility/
+       height rules as a belt-and-braces measure. */
+    .table-wrapper thead,
+    .table-wrapper thead tr,
+    .table-wrapper thead th {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        border: 0 !important;
+        margin: 0 !important;
     }
 
     .table-wrapper tr {
