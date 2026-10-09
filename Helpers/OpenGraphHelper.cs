@@ -105,6 +105,8 @@ public static class OpenGraphHelper
         cleanText = Regex.Replace(cleanText, @"\[([^\]]+)\]\([^\)]+\)", "$1");
         cleanText = Regex.Replace(cleanText, @"```[\s\S]*?```", "");
         cleanText = Regex.Replace(cleanText, @"`[^`]+`", "");
+        cleanText = Regex.Replace(cleanText, @"^\|.*\|$", "", RegexOptions.Multiline);
+        cleanText = Regex.Replace(cleanText, @"\s*\|\s*", " ");
         cleanText = Regex.Replace(cleanText, @"(\*\*|__|\*|_)", "");
         cleanText = Regex.Replace(cleanText, @"\s+", " ").Trim();
 
