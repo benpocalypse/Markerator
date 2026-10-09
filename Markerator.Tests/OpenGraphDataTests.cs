@@ -41,10 +41,10 @@ public class OpenGraphDataTests
 
         var html = og.GenerateMetaTags();
 
-        html.Should().Contain("<meta name=\"twitter:card\" content=\"summary_large_image\" />")
-                    .And.Contain("<meta name=\"twitter:title\" content=\"My Page\" />")
-                    .And.Contain("<meta name=\"twitter:description\" content=\"A description.\" />")
-                    .And.Contain("<meta name=\"twitter:image\" content=\"https://example.com/img.jpg\" />");
+        html.Should().Contain("<meta name=\"twitter:card\" value=\"summary_large_image\" />")
+                    .And.Contain("<meta name=\"twitter:title\" value=\"My Page\" />")
+                    .And.Contain("<meta name=\"twitter:description\" value=\"A description.\" />")
+                    .And.Contain("<meta name=\"twitter:image\" value=\"https://example.com/img.jpg\" />");
     }
 
     [Fact]

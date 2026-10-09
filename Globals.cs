@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "0.8.6";
+    public static readonly string Version = "0.8.7";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
@@ -111,25 +111,25 @@ public static class Globals
 .table-wrapper {
     overflow-x: auto;
     margin: 1.5em 0;
-    /* Prevent the wrapper from causing horizontal page scroll on wide tables. */
     max-width: 100%;
 }
 
 .table-wrapper table {
-    /* By default, let the table fill the wrapper. If the content is
-       wider than the viewport, the wrapper scrolls. */
     width: 100%;
     border-collapse: collapse;
 }
 
 /* Base table styling: headers and cells get padding and borders
-   consistent with the rest of the site. */
+   consistent with the rest of the site. These rules are scoped to
+   .table-wrapper so they always take precedence over the generic
+   th, td rules below. */
 .table-wrapper th,
 .table-wrapper td {
     padding: 10px 14px;
     text-align: left;
     vertical-align: top;
     border-bottom: 1px solid var(--border-subtle);
+    color: var(--text);
 }
 
 .table-wrapper th {
@@ -166,6 +166,7 @@ public static class Globals
         border-radius: 6px;
         padding: 8px 12px;
         background-color: var(--bg-dropdown);
+        color: var(--text);
     }
 
     /* Each cell becomes a labeled block. */
@@ -177,6 +178,8 @@ public static class Globals
         padding: 6px 0;
         border-bottom: 1px solid var(--border-subtle);
         text-align: right;
+        background-color: transparent;
+        color: var(--text);
     }
 
     .table-wrapper td:last-child {
@@ -291,19 +294,7 @@ public static class Globals
     border-color: var(--accent);
 }
 
-/* ---- Content, tables, dropdowns ---- */
-
-table, th, td {
-    border: 0px solid var(--border-subtle);
-    border-collapse: collapse;
-}
-
-th, td {
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 0px;
-    padding-right: 20px;
-}
+/* ---- Content, dropdowns ---- */
 
 .dropdownbutton {
     background-color: var(--accent);
