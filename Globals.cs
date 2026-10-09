@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "0.8.7";
+    public static readonly string Version = "0.8.8";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
@@ -17,8 +17,6 @@ public static class Globals
     public static readonly string DefaultCss = @"
 /* ============================================================
    Default — light/dark with radio-based mode toggle
-   A warm cream light theme with a red accent, and a warm
-   near-black dark variant.
    ============================================================ */
 
 /* ---- Default (light) ---- */
@@ -43,7 +41,6 @@ public static class Globals
     color: var(--text);
 }
 
-/* ---- System prefers dark: default becomes dark ---- */
 @media (prefers-color-scheme: dark) {
     .color-scheme-wrapper {
         --bg: #1a1614;
@@ -63,7 +60,6 @@ public static class Globals
     }
 }
 
-/* ---- User explicitly picked dark ---- */
 #mode_dark:checked ~ .color-scheme-wrapper {
     --bg: #1a1614;
     --bg-nav: #1a1614;
@@ -81,7 +77,6 @@ public static class Globals
     --shadow: rgba(0, 0, 0, 0.6);
 }
 
-/* ---- User explicitly picked light, overriding a dark system preference ---- */
 #mode_light:checked ~ .color-scheme-wrapper {
     --bg: #fcf7f0;
     --bg-nav: #fcf7f0;
@@ -100,12 +95,7 @@ public static class Globals
 }
 
 /* ============================================================
-   Responsive tables
-   ------------------------------------------------------------
-   On wide viewports, tables render normally inside a scrollable
-   wrapper. On narrow viewports (below 700px), the table stacks
-   into a card layout, with each cell showing its column header
-   via the data-label attribute injected by TableHelper.
+   Tables — all rules scoped to .table-wrapper
    ============================================================ */
 
 .table-wrapper {
@@ -119,10 +109,7 @@ public static class Globals
     border-collapse: collapse;
 }
 
-/* Base table styling: headers and cells get padding and borders
-   consistent with the rest of the site. These rules are scoped to
-   .table-wrapper so they always take precedence over the generic
-   th, td rules below. */
+/* Base (desktop) table styling. */
 .table-wrapper th,
 .table-wrapper td {
     padding: 10px 14px;
@@ -138,28 +125,32 @@ public static class Globals
     border-bottom: 2px solid var(--border);
 }
 
-/* --------------------------------------------------------------------
-   Narrow viewports: stack the table into cards, one per row.
-   Each cell shows its column label from the data-label attribute.
-   -------------------------------------------------------------------- */
+/* Images inside table cells: keep them from overflowing on narrow
+   viewports, and align them neatly inside the cell. */
+.table-wrapper th img,
+.table-wrapper td img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
 
+/* Mobile: stack the table into cards, one per row. */
 @media (max-width: 700px) {
     .table-wrapper table,
     .table-wrapper thead,
     .table-wrapper tbody,
+    .table-wrapper tr,
     .table-wrapper th,
-    .table-wrapper td,
-    .table-wrapper tr {
+    .table-wrapper td {
         display: block;
         width: 100%;
     }
 
-    /* Hide the header row; each cell shows its own label instead. */
     .table-wrapper thead {
         display: none;
     }
 
-    /* Each row becomes a card. */
     .table-wrapper tr {
         margin-bottom: 1em;
         border: 1px solid var(--border);
@@ -169,7 +160,6 @@ public static class Globals
         color: var(--text);
     }
 
-    /* Each cell becomes a labeled block. */
     .table-wrapper td {
         display: flex;
         justify-content: space-between;
@@ -186,7 +176,6 @@ public static class Globals
         border-bottom: none;
     }
 
-    /* The data-label is rendered as a pseudo-element on the left. */
     .table-wrapper td::before {
         content: attr(data-label);
         font-weight: bold;
@@ -196,15 +185,15 @@ public static class Globals
         max-width: 40%;
     }
 
-    /* Cells without a data-label (e.g. extra cells beyond the header
-       count) render as plain blocks. */
     .table-wrapper td:not([data-label])::before {
         content: """";
         display: none;
     }
 }
 
-/* ---- Structural rules ---- */
+/* ============================================================
+   Structural rules
+   ============================================================ */
 
 .navigation-title {
     overflow: hidden;
@@ -252,8 +241,6 @@ public static class Globals
     color: var(--accent-hover);
 }
 
-/* ---- Toggle ---- */
-
 .mode-input {
     position: absolute;
     width: 1px;
@@ -286,15 +273,12 @@ public static class Globals
     border-color: var(--accent);
 }
 
-/* Highlight the active mode's label. */
 #mode_light:checked ~ .color-scheme-wrapper label[for=""mode_light""],
 #mode_dark:checked ~ .color-scheme-wrapper label[for=""mode_dark""] {
     background-color: var(--accent);
     color: var(--accent-contrast);
     border-color: var(--accent);
 }
-
-/* ---- Content, dropdowns ---- */
 
 .dropdownbutton {
     background-color: var(--accent);
@@ -356,8 +340,6 @@ public static class Globals
     color: var(--accent-hover);
 }
 
-/* ---- Pagination ---- */
-
 .pagination {
     display: flex;
     justify-content: center;
@@ -395,8 +377,6 @@ public static class Globals
     border-color: var(--border-subtle);
     cursor: not-allowed;
 }
-
-/* ---- Headings, body, footer ---- */
 
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-heading);
