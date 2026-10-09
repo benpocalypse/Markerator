@@ -6,9 +6,7 @@ A very simple static website generator written in C#/.Net. I created this mainly
 ## Interim Icon
 I've asked a very talented artist to create a good icon for Markerator that complies with the Gnome HIG/style, but in the meantime, I've come up with this as a placeholder.
 
-<p style="text-align: center;">
 ![Markerator Icon](Icon.png)
-</p>
 
 
 # Simple
@@ -107,7 +105,7 @@ We never knew this day would come, and yet it did.
 
 This will produce an entry on the overview Posts/News/Blog/Projects page that will sort this entry by date, and provide a header of "Skynet Sentience" With the first line being the "summary" for that entry.
 
-#### CSS File Documentation
+## CSS File Documentation
 The specific format for a custom CSS file that Markerator can use to style your site is documented here: [CSS File Format](docs/CssFormat.md) 
 
 Although this intended to be a stable document when v1.0.0 is released, there may be breaking changes in the future. If that is the case, it will be made obvious in this Readme file, and the historical CSS Format that goes with each previous version will remain active and noted here.
