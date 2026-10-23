@@ -185,7 +185,14 @@ namespace Markerator.Helpers
         private string RenderMarkdown(string markdown)
         {
             var html = Markdown.ToHtml(markdown, _markdownPipeline);
-            return TableHelper.MakeTablesResponsive(html);
+    
+            // 1. Make tables mobile responsive
+            html = TableHelper.MakeTablesResponsive(html);
+    
+            // 2. Ensure relative links work when opened locally (file:// protocol)
+            html = LinkHelper.MakeLinksFileSystemFriendly(html);
+    
+            return html;
         }
 
         /// <summary>
@@ -293,7 +300,7 @@ namespace Markerator.Helpers
 
             foreach (var section in _postsTitles)
             {
-                sb.AppendLine($"      <a href=\"/{section}.html\">{section}</a>");
+                sb.AppendLine($"      <a href=\"./{section}.html\">{section}</a>");
             }
 
             foreach (var page in _otherPages)
@@ -610,14 +617,16 @@ namespace Markerator.Helpers
             sb.AppendLine("  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
             sb.AppendLine($"  <title>{System.Net.WebUtility.HtmlEncode(title)}</title>");
 
+            // Inside BuildFullHtmlDocument, update the CSS and Favicon links:
+
             var cssHref = string.IsNullOrEmpty(_css)
-                ? "/css/site.css"
-                : $"/css/{Path.GetFileName(_css)}";
+                ? "./css/site.css"
+                : $"./css/{Path.GetFileName(_css)}";
             sb.AppendLine($"  <link rel=\"stylesheet\" href=\"{cssHref}\" />");
 
             if (_favicon)
             {
-                sb.AppendLine("  <link rel=\"icon\" href=\"/images/favicon.ico\" />");
+                sb.AppendLine("  <link rel=\"icon\" href=\"./images/favicon.ico\" />");
             }
 
             if (ogData != null!)
@@ -643,7 +652,7 @@ namespace Markerator.Helpers
 
             sb.AppendLine("  <div class=\"color-scheme-wrapper\">");
             sb.AppendLine("    <div class=\"navigation-title\">");
-            sb.AppendLine($"      <a href=\"/\">{System.Net.WebUtility.HtmlEncode(_siteTitle)}</a>");
+            sb.AppendLine($"    <a href=\"./index.html\">{System.Net.WebUtility.HtmlEncode(_siteTitle)}</a>");
             sb.AppendLine("      <div class=\"mode-toggle\">");
             sb.AppendLine("        <label for=\"mode_light\" class=\"mode-label\">light</label>");
             sb.AppendLine("        <label for=\"mode_dark\" class=\"mode-label\">dark</label>");

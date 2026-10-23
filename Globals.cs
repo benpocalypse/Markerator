@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "1.0.0";
+    public static readonly string Version = "1.0.1";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
@@ -22,7 +22,7 @@ public static class Globals
 /* ---- Default (light) ---- */
 .color-scheme-wrapper {
     --bg: #fcf7f0;
-    --bg-nav: #fcf7f0;
+    --bg-nav: #fcf7f0;`1    aq
     --bg-dropdown: #f1f1f1;
     --bg-dropdown-hover: #ddd;
     --text: #5e5e5e;
