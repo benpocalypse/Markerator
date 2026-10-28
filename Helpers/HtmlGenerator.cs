@@ -286,11 +286,11 @@ namespace Markerator.Helpers
             Console.WriteLine($"  Copied {foldersCopied} folder(s) / {filesCopied} file(s).");
             Console.WriteLine("------------------------------------------------------------");
         }
-
+        
         /// <summary>
         /// Builds the navigation HTML from the configured post sections and extra pages.
-        /// Each section links to its canonical first page (e.g. <c>/News.html</c>),
-        /// and each extra page links to <c>/{name}.html</c>.
+        /// Each section links to its canonical first page (e.g. <c>./News.html</c>),
+        /// and each extra page links to <c>./{name}.html</c>.
         /// </summary>
         /// <returns>The rendered navigation markup.</returns>
         private string BuildNavigation()
@@ -306,7 +306,8 @@ namespace Markerator.Helpers
             foreach (var page in _otherPages)
             {
                 var name = Path.GetFileNameWithoutExtension(page);
-                sb.AppendLine($"      <a href=\"/{name}.html\">{name}</a>");
+                // Changed the leading "/" to "./" here:
+                sb.AppendLine($"      <a href=\"./{name}.html\">{name}</a>");
             }
 
             sb.AppendLine("    </div>");
@@ -457,7 +458,7 @@ namespace Markerator.Helpers
 
                         foreach (var post in group)
                         {
-                            var link = $"/{sectionName}/{post.FileName}.html";
+                            var link = $"./{sectionName}/{post.FileName}.html";
                             var titleText = WebUtility.HtmlEncode(post.Title);
 
                             if (post.Date.HasValue)

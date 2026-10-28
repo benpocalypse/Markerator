@@ -78,7 +78,7 @@ public static class PaginationHelper
         if (currentPage > 1)
         {
             var prevFile = GetPageFileName(sectionName, currentPage - 1);
-            sb.AppendLine($"  <a class=\"pagination-prev\" href=\"/{prevFile}\">&laquo; Previous</a>");
+            sb.AppendLine($"  <a class=\"pagination-prev\" href=\"./{prevFile}\">&laquo; Previous</a>");
         }
         else
         {

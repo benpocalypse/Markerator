@@ -6,7 +6,7 @@
 public static class Globals
 {
     /// <summary>The current Markerator version, surfaced in generated page footers.</summary>
-    public static readonly string Version = "1.0.1";
+    public static readonly string Version = "1.0.2";
 
     /// <summary>
     /// The built-in default stylesheet, written to <c>output/css/site.css</c> when
